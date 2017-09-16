@@ -1,6 +1,6 @@
 {
   "name": "lapid",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "natural language generation and processing done right",
   "main": "index.js",
   "scripts": {

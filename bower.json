@@ -1,0 +1,22 @@
+{
+  "name": "lapid",
+  "description": "natural language generation and processing done right",
+  "main": "index.js",
+  "authors": [
+    "Nano Miratus <nanomiratus@gmail.com>"
+  ],
+  "license": "Unlicense",
+  "keywords": [
+    "nlp",
+    "nlg",
+    "language"
+  ],
+  "homepage": "",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}

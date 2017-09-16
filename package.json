@@ -1,0 +1,16 @@
+{
+  "name": "lapid",
+  "version": "1.0.0",
+  "description": "natural language generation and processing done right",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "nlp",
+    "nlg",
+    "language"
+  ],
+  "author": "Nano Miratus <nanomiratus@gmail.com>",
+  "license": "Unlicense"
+}

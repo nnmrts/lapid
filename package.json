@@ -12,5 +12,11 @@
     "language"
   ],
   "author": "Nano Miratus <nanomiratus@gmail.com>",
-  "license": "Unlicense"
+  "license": "Unlicense",
+  "repository": "https://github.com/nnmrts/lapid.git",
+  "private": false,
+  "devDependencies": {
+    "gulp": "^3.9.1",
+    "gulp-release-it": "^1.1.6"
+  }
 }

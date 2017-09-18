@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="examplePoem">
+
+	<head>
+		<title>lapid examples - poem</title>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+
+		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/angular-material/1.1.5/angular-material.min.css" />
+
+		<link href="https://fonts.googleapis.com/css?family=IM+Fell+Great+Primer:400,400i|Roboto:100,100i,300,300i,400,400i,500,500i,700,700i,900,900i&amp;subset=latin-ext" rel="stylesheet">
+
+
+		<link href="../examples.css" rel="stylesheet">
+
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.6.5/angular.min.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.6.5/angular-animate.min.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.6.5/angular-aria.min.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.6.5/angular-cookies.min.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.6.5/angular-loader.min.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.6.5/angular-message-format.min.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.6.5/angular-messages.min.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.6.5/angular-parse-ext.min.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.6.5/angular-resource.min.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.6.5/angular-route.min.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.6.5/angular-sanitize.min.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.6.5/angular-touch.min.js"></script>
+
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/angular-material/1.1.5/angular-material.min.js"></script>
+
+		<script src="../../lapid.js"></script>
+
+		<script src="app.js"></script>
+	</head>
+
+	<body id="poem" ng-controller="ctrl">
+
+		<md-content class="main" layout-padding layout="column" layout-align="space-around stretch">
+			<form name="settingsForm" ng-submit="poem.generate()">
+				<md-card id="settings-card">
+					<md-card-title>
+						<md-card-title-text>
+							<span class="md-headline">settings</span>
+						</md-card-title-text>
+					</md-card-title>
+					<md-card-content layout="column" layout-align="space-around stretch">
+
+						<md-input-container>
+							<label>language</label>
+							<md-select name="language" ng-model="settings.language">
+								<md-option ng-repeat="language in languages" ng-value="language">
+									{{language.name}}
+								</md-option>
+							</md-select>
+						</md-input-container>
+
+						<md-input-container>
+							<label>lines</label>
+							<input name="linesCount" type="number" min="1" max="16" ng-model="settings.linesCount" required>
+
+							<div ng-messages="settingsForm.linesCount.$error" role="alert" multiple>
+								<div ng-message="required">no line number given</div>
+								<div ng-message="min">line number to low</div>
+								<div ng-message="max">line number to high</div>
+							</div>
+						</md-input-container>
+
+
+					</md-card-content>
+					<md-card-actions layout="row" layout-align="end center">
+						<md-button type="submit">generate</md-button>
+					</md-card-actions>
+				</md-card>
+
+				<md-card id="poem-card">
+					<md-card-title>
+						<md-card-title-text>
+							<span class="md-headline">{{poem.title}}</span>
+						</md-card-title-text>
+					</md-card-title>
+					<md-card-content>
+						<pre>{{poem.text}}</pre>
+					</md-card-content>
+				</md-card>
+
+			</form>
+		</md-content>
+
+	</body>
+
+</html>

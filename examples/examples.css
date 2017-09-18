@@ -1,0 +1,9 @@
+md-content.main {
+	padding: 8px 500px;
+}
+
+#poem-card md-card-content>pre {
+	font-family: 'IM Fell Great Primer', serif;
+	font-size: 36px;
+	margin: 10px 0px;
+}

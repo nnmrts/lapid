@@ -6,19 +6,15 @@
 		"Nano Miratus <nanomiratus@gmail.com>"
 	],
 	"license": "Unlicense",
-	"repository": "https://github.com/nnmrts/lapid.git",
+	"repository": {
+		"url": "https://github.com/nnmrts/lapid.git",
+		"type": "git"
+	},
 	"keywords": [
 		"nlp",
 		"nlg",
 		"language"
 	],
 	"homepage": "",
-	"ignore": [
-		"**/.*",
-		"node_modules",
-		"bower_components",
-		"test",
-		"tests"
-	],
 	"version": "1.0.1"
 }

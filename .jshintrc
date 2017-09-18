@@ -1,0 +1,14 @@
+{
+	"globals": {
+		"angular": true,
+		"window": true,
+		"$": true,
+		"jQuery": true,
+		"console": true,
+		"lpd": true,
+		"lapid": true,
+		"require": true
+	},
+	"esversion": 6,
+	"strict": "global"
+}

@@ -1,30 +1,30 @@
 {
-  "name": "lapid",
-  "version": "1.0.3",
-  "description": "natural language generation and processing done right",
-  "main": "dist/lapid.js",
-  "module": "dist/module/lapid.js",
-  "browser": "dist/browser/lapid.js",
-  "scripts": {
-    "build": "gulp",
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "keywords": [
-    "nlp",
-    "nlg",
-    "language"
-  ],
-  "author": "Nano Miratus <nanomiratus@gmail.com>",
-  "license": "Unlicense",
-  "repository": "https://github.com/nnmrts/lapid.git",
-  "private": false,
-  "devDependencies": {
-    "gulp": "^3.9.1",
-    "gulp-changed": "^3.1.0",
-    "gulp-release-it": "^1.1.6",
-    "rollup-plugin-commonjs": "^8.2.1",
-    "rollup-plugin-node-resolve": "^3.0.0",
-    "rollup-stream": "^1.24.1",
-    "vinyl-source-stream": "^1.1.0"
-  }
+	"name": "lapid",
+	"version": "1.0.3",
+	"description": "natural language generation and processing done right",
+	"main": "dist/lapid.js",
+	"module": "dist/module/lapid.js",
+	"browser": "dist/browser/lapid.js",
+	"scripts": {
+		"build": "gulp",
+		"test": "echo \"Error: no test specified\" && exit 1"
+	},
+	"keywords": [
+		"nlp",
+		"nlg",
+		"language"
+	],
+	"author": "Nano Miratus <nanomiratus@gmail.com>",
+	"license": "Unlicense",
+	"repository": "https://github.com/nnmrts/lapid.git",
+	"private": false,
+	"devDependencies": {
+		"gulp": "^3.9.1",
+		"gulp-changed": "^3.1.0",
+		"gulp-release-it": "^1.1.6",
+		"rollup-plugin-commonjs": "^8.2.1",
+		"rollup-plugin-node-resolve": "^3.0.0",
+		"rollup-stream": "^1.24.1",
+		"vinyl-source-stream": "^1.1.0"
+	}
 }

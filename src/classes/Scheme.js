@@ -18,7 +18,7 @@ let Scheme = class {
 	 * @param {any} keep 
 	 * @readonly
 	 */
-	get expand(linesCount, keep) {
+	static expand(linesCount, keep) {
 		if (keep) {
 			let addition = this.scheme.length - linesCount;
 
@@ -46,7 +46,7 @@ let Scheme = class {
 	 * @param {any} linesCount 
 	 * @readonly
 	 */
-	get shorten(linesCount) {
+	static shorten(linesCount) {
 		this.scheme.splice(linesCount);
 	}
 

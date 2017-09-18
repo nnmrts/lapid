@@ -89,8 +89,6 @@ $RECYCLE.BIN/
 
 *.log
 
-build/
-dist/
 
 .sass-cache/
 *.css.map

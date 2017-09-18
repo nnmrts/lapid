@@ -1,7 +1,9 @@
 {
 	"name": "lapid",
 	"description": "natural language generation and processing done right",
-	"main": "index.js",
+	"main": "dist/lapid.js",
+	"module": "dist/module/lapid.js",
+	"browser": "dist/browser/lapid.js",
 	"authors": [
 		"Nano Miratus <nanomiratus@gmail.com>"
 	],

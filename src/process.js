@@ -6,3 +6,5 @@ import DEFAULTS from "./process/DEFAULTS.js";
 let process = {
 
 };
+
+export default process;

@@ -5,9 +5,9 @@ const runSequence = require("run-sequence");
 const rollup = require("rollup-stream");
 const source = require("vinyl-source-stream");
 
-import resolve from "rollup-plugin-node-resolve";
-import commonjs from "rollup-plugin-commonjs";
-import pkg from "./package.json";
+const resolve = require("rollup-plugin-node-resolve");
+const commonjs = require("rollup-plugin-commonjs");
+const pkg = require("./package.json");
 
 require("gulp-release-it")(gulp);
 
@@ -26,7 +26,7 @@ gulp.task("rollup:browser", function() {
 		.pipe(source("lapid.js"))
 
 		// and output to ./dist/app.js as normal.
-		.pipe(gulp.dest(pkg.browser));
+		.pipe(gulp.dest(pkg.browser.replace("/lapid.js", "")));
 });
 
 gulp.task("rollup:main", function() {
@@ -39,7 +39,7 @@ gulp.task("rollup:main", function() {
 		.pipe(source("lapid.js"))
 
 		// and output to ./dist/app.js as normal.
-		.pipe(gulp.dest(pkg.main));
+		.pipe(gulp.dest(pkg.main.replace("/lapid.js", "")));
 });
 
 gulp.task("rollup:module", function() {
@@ -52,7 +52,7 @@ gulp.task("rollup:module", function() {
 		.pipe(source("lapid.js"))
 
 		// and output to ./dist/app.js as normal.
-		.pipe(gulp.dest(pkg.module));
+		.pipe(gulp.dest(pkg.module.replace("/lapid.js", "")));
 });
 
 gulp.task("default", function() {

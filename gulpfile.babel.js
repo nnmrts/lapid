@@ -1,21 +1,23 @@
 "use strict";
 
-const gulp = require("gulp");
-const runSequence = require("run-sequence");
-const rollup = require("rollup-stream");
-const source = require("vinyl-source-stream");
+import gulp from "gulp";
+import runSequence from "run-sequence";
+import rollup from "rollup-stream";
+import source from "vinyl-source-stream";
 
-const resolve = require("rollup-plugin-node-resolve");
-const commonjs = require("rollup-plugin-commonjs");
-const pkg = require("./package.json");
+import resolve from "rollup-plugin-node-resolve";
+import commonjs from "rollup-plugin-commonjs";
+import pkg from "./package.json";
 
-require("overwrite");
+import overwrite from "overwrite";
 
 const gulpRelease = overwrite("gulp-release-it", {
 	"main.js": contents => {
-		return contents.replace(/\{stdio: 'inherit'\}/, "{stdio: 'inherit', shell: 'true'}");
+		return contents
+			.replace(/\{stdio: 'inherit'\}/, "{stdio: 'inherit', shell: 'true'}")
+			.replace(/require\('run\-sequence'\)/, "require('run-sequence').use(gulp)");
 	}
-})(gulp);
+});
 
 gulp.task("rollup:browser", function() {
 	return rollup({

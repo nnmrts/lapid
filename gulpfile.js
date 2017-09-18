@@ -9,7 +9,13 @@ const resolve = require("rollup-plugin-node-resolve");
 const commonjs = require("rollup-plugin-commonjs");
 const pkg = require("./package.json");
 
-require("gulp-release-it")(gulp);
+const overwrite = require("overwrite");
+
+const gulpRelease = overwrite("gulp-release-it", {
+	"main.js": contents => {
+		return contents.replace(/\{stdio: 'inherit'\}/, "{stdio: 'inherit', shell: 'true'}");
+	}
+})(gulp);
 
 gulp.task("rollup:browser", function() {
 	return rollup({

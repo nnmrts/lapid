@@ -9,7 +9,7 @@ const resolve = require("rollup-plugin-node-resolve");
 const commonjs = require("rollup-plugin-commonjs");
 const pkg = require("./package.json");
 
-const overwrite = require("overwrite");
+require("overwrite");
 
 const gulpRelease = overwrite("gulp-release-it", {
 	"main.js": contents => {

@@ -135,7 +135,6 @@ let Scheme = class {
 
 let generate = {
 	Line: function(options) {
-
 		options = DEFAULTS.line.merge(arguments[0]);
 
 		if (options.rhyme) {

@@ -159,7 +159,6 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
 
 	var generate = {
 		Line: function Line(options) {
-
 			options = DEFAULTS.line.merge(arguments[0]);
 
 			if (options.rhyme) {

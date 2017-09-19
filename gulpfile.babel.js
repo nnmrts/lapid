@@ -8,7 +8,6 @@ import source from "vinyl-source-stream";
 
 import resolve from "rollup-plugin-node-resolve";
 import commonjs from "rollup-plugin-commonjs";
-import babel from "rollup-plugin-babel";
 
 import fs from "fs";
 import argv from "yargs";
@@ -20,6 +19,7 @@ import jeditor from "gulp-json-editor";
 import gutil from "gulp-util";
 import map from "map-stream";
 import spawn from "child_process";
+import babel from "gulp-babel";
 
 import pkg from "./package.json";
 
@@ -40,12 +40,8 @@ gulp.task("rollup:browser", function() {
 			format: "umd",
 			plugins: [
 				resolve(), // so Rollup can find `ms`
-				commonjs(), // so Rollup can convert `ms` to an ES module
-				babel({
-					exclude: 'node_modules/**'
-				})
+				commonjs() // so Rollup can convert `ms` to an ES module
 			]
-
 		})
 		// give the file the name you want to output with
 		.pipe(source("lapid.js"))
@@ -59,11 +55,7 @@ gulp.task("rollup:main", function() {
 			input: "src/main.js",
 			name: pkg.name,
 			format: "cjs",
-			plugins: [
-				babel({
-					exclude: 'node_modules/**'
-				})
-			]
+			plugins: []
 		})
 		// give the file the name you want to output with
 		.pipe(source("lapid.js"))
@@ -77,11 +69,7 @@ gulp.task("rollup:module", function() {
 			input: "src/main.js",
 			name: pkg.name,
 			format: "es",
-			plugins: [
-				babel({
-					exclude: 'node_modules/**'
-				})
-			]
+			plugins: []
 		})
 		// give the file the name you want to output with
 		.pipe(source("lapid.js"))
@@ -90,34 +78,16 @@ gulp.task("rollup:module", function() {
 		.pipe(gulp.dest(pkg.module.replace("/lapid.js", "")));
 });
 
+gulp.task("babel", function() {
+	gulp.src(pkg.browser)
+		.pipe(babel({
+			presets: ['env']
+		}))
+		.pipe(gulp.dest(pkg.browser.replace("/lapid.js", "")));
+});
+
 gulp.task("bump-complete-release", function(done) {
 	let currentRootDir = rootDir.resolve(argv.argv.rootDir || "./") + "/";
-
-	git.commit(commitMessage, {
-		cwd: currentRootDir
-	});
-
-	var message = "no commit message provided";
-
-	git.status({
-		args: '--porcelain'
-	}, function(err, stdout) {
-		// if (err) throw err;
-	});
-
-	gulp.src("**")
-		.pipe(git.add())
-		.pipe(prompt.prompt({
-			type: "input",
-			name: "message",
-			message: "Please add a commit message for your last changes:",
-			default: message
-		}, function(res) {
-			message = res.message;
-		}))
-		.pipe(git.commit(message, {
-			cwd: currentRootDir
-		}));
 
 	let currVersion = JSON.parse(
 		fs.readFileSync(
@@ -161,89 +131,93 @@ gulp.task("bump-complete-release", function(done) {
 		cwd: currentRootDir
 	});
 
-	let paths = {
-		versionsToBump: _.map(["package.json", "bower.json", "manifest.json"], function(fileName) {
-			return currentRootDir + fileName;
-		})
-	};
+		let paths = {
+			versionsToBump: _.map(["package.json", "bower.json", "manifest.json"], function(fileName) {
+				return currentRootDir + fileName;
+			})
+		};
 
-	gulp.src(paths.versionsToBump, {
+		gulp.src(paths.versionsToBump, {
+				cwd: currentRootDir
+			})
+			.pipe(jeditor({
+				"version": newVersion
+			}))
+			.pipe(gulp.dest("./", {
+				cwd: currentRootDir
+			}));
+
+		let commitMessage = "Bumps version to v" + newVersion;
+
+		gulp.src("./*.json", {
 			cwd: currentRootDir
-		})
-		.pipe(jeditor({
-			"version": newVersion
-		}))
-		.pipe(gulp.dest("./", {
+		}).pipe(git.commit(commitMessage, {
 			cwd: currentRootDir
-		}));
+		})).on('end', function() {
+			git.push("origin", branch, {
 
-	let commitMessage = "Bumps version to v" + newVersion;
-
-	gulp.src("./*.json", {
-		cwd: currentRootDir
-	}).pipe(git.commit(commitMessage, {
-		cwd: currentRootDir
-	})).on('end', function() {
-		git.push("origin", branch, {
-
-			cwd: currentRootDir
-		}, function(err) {
-			if (err) {
-				console.error(err);
-			}
-			else {
-				// resolve();
-			}
-		});
-	});
-
-	let tagVersion = function() {
-		function modifyContents(file, cb) {
-			var version = currVersion; // OK if undefined at this time
-			if (!currVersion) {
-				if (file.isNull()) return cb(null, file);
-				if (file.isStream()) return cb(new Error("gulp-tag-version: streams not supported"));
-
-				var json = JSON.parse(file.contents.toString());
-				version = json.version;
-			}
-			var tag = "v" + version;
-			var label = "Tagging as %t".replace("%t", tag);
-			gutil.log("Tagging as: " + gutil.colors.cyan(tag));
-			git.tag(tag, label, {
 				cwd: currentRootDir
 			}, function(err) {
 				if (err) {
-					throw err;
+					console.error(err);
 				}
-				cb();
-			});
-		}
-
-		return map(modifyContents);
-	};
-
-	gulp.src("./", {
-			cwd: currentRootDir
-		})
-		.pipe(tagVersion())
-		.on('end', function() {
-			git.push('origin', branch, {
-				args: '--tags',
-				cwd: currentRootDir
+				else {
+					// resolve();
+				}
 			});
 		});
 
-	spawn.spawn("npm", ["publish", currentRootDir], {
-		stdio: "inherit",
-		shell: true
-	}).on("close", done);
+		let tagVersion = function() {
+			function modifyContents(file, cb) {
+				var version = currVersion; // OK if undefined at this time
+				if (!currVersion) {
+					if (file.isNull()) return cb(null, file);
+					if (file.isStream()) return cb(new Error("gulp-tag-version: streams not supported"));
+
+					var json = JSON.parse(file.contents.toString());
+					version = json.version;
+				}
+				var tag = "v" + version;
+				var label = "Tagging as %t".replace("%t", tag);
+				gutil.log("Tagging as: " + gutil.colors.cyan(tag));
+				git.tag(tag, label, {
+					cwd: currentRootDir
+				}, function(err) {
+					if (err) {
+						throw err;
+					}
+					cb();
+				});
+			}
+
+			return map(modifyContents);
+		};
+
+		gulp.src("./", {
+				cwd: currentRootDir
+			})
+			.pipe(tagVersion())
+			.on('end', function() {
+				git.push('origin', branch, {
+					args: '--tags',
+					cwd: currentRootDir
+				});
+			});
+
+		spawn.spawn("npm", ["publish", currentRootDir], {
+			stdio: "inherit",
+			shell: true
+		}).on("close", done);
+
+
+
 
 });
 
 gulp.task("default", function() {
 	runSequence(
 		"rollup:browser",
+		"babel",
 		"rollup:main",
 		"rollup:module",
 		"bump-complete-release"

@@ -7,7 +7,6 @@ import Scheme from "./classes/Scheme.js";
 
 let generate = {
 	Line: function(options) {
-
 		options = DEFAULTS.line.merge(arguments[0]);
 
 		if (options.rhyme) {

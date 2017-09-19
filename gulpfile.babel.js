@@ -8,6 +8,7 @@ import source from "vinyl-source-stream";
 
 import resolve from "rollup-plugin-node-resolve";
 import commonjs from "rollup-plugin-commonjs";
+import babel from "rollup-plugin-babel";
 
 import fs from "fs";
 import argv from "yargs";
@@ -39,7 +40,10 @@ gulp.task("rollup:browser", function() {
 			format: "umd",
 			plugins: [
 				resolve(), // so Rollup can find `ms`
-				commonjs() // so Rollup can convert `ms` to an ES module
+				commonjs(), // so Rollup can convert `ms` to an ES module
+				babel({
+					exclude: 'node_modules/**'
+				})
 			]
 
 		})
@@ -54,7 +58,12 @@ gulp.task("rollup:main", function() {
 	return rollup({
 			input: "src/main.js",
 			name: pkg.name,
-			format: "cjs"
+			format: "cjs",
+			plugins: [
+				babel({
+					exclude: 'node_modules/**'
+				})
+			]
 		})
 		// give the file the name you want to output with
 		.pipe(source("lapid.js"))
@@ -68,6 +77,11 @@ gulp.task("rollup:module", function() {
 			input: "src/main.js",
 			name: pkg.name,
 			format: "es",
+			plugins: [
+				babel({
+					exclude: 'node_modules/**'
+				})
+			]
 		})
 		// give the file the name you want to output with
 		.pipe(source("lapid.js"))
@@ -78,6 +92,32 @@ gulp.task("rollup:module", function() {
 
 gulp.task("bump-complete-release", function(done) {
 	let currentRootDir = rootDir.resolve(argv.argv.rootDir || "./") + "/";
+
+	git.commit(commitMessage, {
+		cwd: currentRootDir
+	});
+
+	var message = "no commit message provided";
+
+	git.status({
+		args: '--porcelain'
+	}, function(err, stdout) {
+		// if (err) throw err;
+	});
+
+	gulp.src("**")
+		.pipe(git.add())
+		.pipe(prompt.prompt({
+			type: "input",
+			name: "message",
+			message: "Please add a commit message for your last changes:",
+			default: message
+		}, function(res) {
+			message = res.message;
+		}))
+		.pipe(git.commit(message, {
+			cwd: currentRootDir
+		}));
 
 	let currVersion = JSON.parse(
 		fs.readFileSync(
@@ -191,7 +231,6 @@ gulp.task("bump-complete-release", function(done) {
 			git.push('origin', branch, {
 				args: '--tags',
 				cwd: currentRootDir
-
 			});
 		});
 

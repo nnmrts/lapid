@@ -23,24 +23,14 @@ import babel from "gulp-babel";
 
 import pkg from "./package.json";
 
-// import overwrite from "overwrite";
-
-// const gulpRelease = overwrite("gulp-release-it", {
-// 	"main.js": contents => {
-// 		return contents
-// 			.replace(/\{stdio: 'inherit'\}/, "{stdio: 'inherit', shell: 'true'}")
-// 			.replace(/require\('run\-sequence'\)/, "require('run-sequence').use(gulp)");
-// 	}
-// });
-
 gulp.task("rollup:browser", function() {
 	return rollup({
 			input: "src/main.js",
 			name: pkg.name,
 			format: "umd",
 			plugins: [
-				resolve(), // so Rollup can find `ms`
-				commonjs() // so Rollup can convert `ms` to an ES module
+				resolve(),
+				commonjs()
 			]
 		})
 		// give the file the name you want to output with
@@ -131,86 +121,83 @@ gulp.task("bump-complete-release", function(done) {
 		cwd: currentRootDir
 	});
 
-		let paths = {
-			versionsToBump: _.map(["package.json", "bower.json", "manifest.json"], function(fileName) {
-				return currentRootDir + fileName;
-			})
-		};
+	let paths = {
+		versionsToBump: _.map(["package.json", "bower.json", "manifest.json"], function(fileName) {
+			return currentRootDir + fileName;
+		})
+	};
 
-		gulp.src(paths.versionsToBump, {
-				cwd: currentRootDir
-			})
-			.pipe(jeditor({
-				"version": newVersion
-			}))
-			.pipe(gulp.dest("./", {
-				cwd: currentRootDir
-			}));
-
-		let commitMessage = "Bumps version to v" + newVersion;
-
-		gulp.src("./*.json", {
+	gulp.src(paths.versionsToBump, {
 			cwd: currentRootDir
-		}).pipe(git.commit(commitMessage, {
+		})
+		.pipe(jeditor({
+			"version": newVersion
+		}))
+		.pipe(gulp.dest("./", {
 			cwd: currentRootDir
-		})).on('end', function() {
-			git.push("origin", branch, {
+		}));
 
+	let commitMessage = "Bumps version to v" + newVersion;
+
+	gulp.src("./*.json", {
+		cwd: currentRootDir
+	}).pipe(git.commit(commitMessage, {
+		cwd: currentRootDir
+	})).on('end', function() {
+		git.push("origin", branch, {
+
+			cwd: currentRootDir
+		}, function(err) {
+			if (err) {
+				console.error(err);
+			}
+			else {
+				// resolve();
+			}
+		});
+	});
+
+	let tagVersion = function() {
+		function modifyContents(file, cb) {
+			var version = currVersion; // OK if undefined at this time
+			if (!currVersion) {
+				if (file.isNull()) return cb(null, file);
+				if (file.isStream()) return cb(new Error("gulp-tag-version: streams not supported"));
+
+				var json = JSON.parse(file.contents.toString());
+				version = json.version;
+			}
+			var tag = "v" + version;
+			var label = "Tagging as %t".replace("%t", tag);
+			gutil.log("Tagging as: " + gutil.colors.cyan(tag));
+			git.tag(tag, label, {
 				cwd: currentRootDir
 			}, function(err) {
 				if (err) {
-					console.error(err);
+					throw err;
 				}
-				else {
-					// resolve();
-				}
+				cb();
+			});
+		}
+
+		return map(modifyContents);
+	};
+
+	gulp.src("./", {
+			cwd: currentRootDir
+		})
+		.pipe(tagVersion())
+		.on('end', function() {
+			git.push('origin', branch, {
+				args: '--tags',
+				cwd: currentRootDir
 			});
 		});
 
-		let tagVersion = function() {
-			function modifyContents(file, cb) {
-				var version = currVersion; // OK if undefined at this time
-				if (!currVersion) {
-					if (file.isNull()) return cb(null, file);
-					if (file.isStream()) return cb(new Error("gulp-tag-version: streams not supported"));
-
-					var json = JSON.parse(file.contents.toString());
-					version = json.version;
-				}
-				var tag = "v" + version;
-				var label = "Tagging as %t".replace("%t", tag);
-				gutil.log("Tagging as: " + gutil.colors.cyan(tag));
-				git.tag(tag, label, {
-					cwd: currentRootDir
-				}, function(err) {
-					if (err) {
-						throw err;
-					}
-					cb();
-				});
-			}
-
-			return map(modifyContents);
-		};
-
-		gulp.src("./", {
-				cwd: currentRootDir
-			})
-			.pipe(tagVersion())
-			.on('end', function() {
-				git.push('origin', branch, {
-					args: '--tags',
-					cwd: currentRootDir
-				});
-			});
-
-		spawn.spawn("npm", ["publish", currentRootDir], {
-			stdio: "inherit",
-			shell: true
-		}).on("close", done);
-
-
-
+	spawn.spawn("npm", ["publish", currentRootDir], {
+		stdio: "inherit",
+		shell: true
+	}).on("close", done);
 
 });
 

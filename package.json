@@ -1,6 +1,6 @@
 {
 	"name": "lapid",
-	"version": "1.0.16",
+	"version": "1.0.17",
 	"description": "natural language generation and processing done right",
 	"main": "dist/lapid.js",
 	"module": "dist/module/lapid.js",

@@ -353,7 +353,6 @@ gulp.task("release", ["npm-publish"], function(cb) {
 	var repo = gh.getRepo("nnmrts", "lapid");
 
 	repo.listTags().then(function(response) {
-
 		let tag_name = "v" + currVersion();
 
 		let target_commitish = branch;
@@ -371,17 +370,11 @@ gulp.task("release", ["npm-publish"], function(cb) {
 			body,
 			draft: false,
 			prerelease
-		}).then(function(response) {
-			gutil.log(response);
-		}).catch(function(e) {
+		}).then(function(response) {}).catch(function(e) {
 			gutil.log(e);
 
 			cb(e);
 		});
-
-		// repo.updateRelease(response.data[0].id, {
-		// 	body: ""
-		// });
 
 	}).catch(function(e) {
 		cb(e);

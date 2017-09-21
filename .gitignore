@@ -92,3 +92,6 @@ $RECYCLE.BIN/
 
 .sass-cache/
 *.css.map
+
+# GitHub Auth
+.githubauth

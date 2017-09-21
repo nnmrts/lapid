@@ -31,6 +31,7 @@ const minify = require("gulp-minify");
 const del = require("del");
 const removeUseStrict = require("gulp-remove-use-strict");
 const moment = require("moment");
+const GitHub = require("github-api");
 
 gulp.task("minify", function() {
 	gulp.src("dist/browser/lapid.js")
@@ -212,7 +213,7 @@ let preid = function() {
 		return "RC";
 	}
 	if (yargs.argv["pre-release"]) {
-		return yarg.argv["pre-release"];
+		return yargs.argv["pre-release"];
 	}
 	return undefined;
 };
@@ -232,7 +233,7 @@ let versioning = function() {
 
 gulp.task("add:build", ["build"], function() {
 	return gulp.src("./*")
-	.pipe(git.add());
+		.pipe(git.add());
 });
 
 gulp.task("commit:build", function() {
@@ -290,12 +291,13 @@ gulp.task("bump", function(resolve) {
 
 });
 
+var tag;
+
 var tagVersion = function(opts) {
 	if (!opts) opts = {};
 	if (!opts.key) opts.key = "version";
 	if (typeof opts.prefix === "undefined") opts.prefix = "v";
 	if (typeof opts.push === "undefined") opts.push = true;
-	if (typeof opts.message === "undefined") opts.message = "browser: [lapid.js](../../blob/%t/dist/browser/lapid.js) npm: [lapid.js](../../blob/%t/dist/lapid.js) es module: [lapid.js](../../blob/%t/dist/module/lapid.js)";
 
 	function modifyContents(file, cb) {
 		var version = opts.version;
@@ -306,11 +308,9 @@ var tagVersion = function(opts) {
 			var json = JSON.parse(file.contents.toString());
 			version = json[opts.key];
 		}
-		var tag = opts.prefix + version;
+		tag = opts.prefix + version;
 
 		var message = tag;
-
-		gutil.log(message);
 
 		gutil.log("Tagging as: " + gutil.colors.cyan(tag));
 		git.tag(tag, message, {
@@ -349,14 +349,52 @@ gulp.task("npm-publish", function(done) {
 	}).on("close", done)
 });
 
-gulp.task("bump-complete-release", ["commit:build"], function() {
-	runSequence(
+gulp.task("bump-tag-publish", ["commit:build"], function() {
+	return runSequence(
 		"bump",
 		"tag-and-push",
 		"npm-publish"
-	)
+	);
 });
 
-gulp.task("release", ["bump-complete-release"]);
+gulp.task("release", ["bump-tag-publish"], function(cb) {
+	var GitHubAuth = JSON.parse(fs.readFileSync(rootDir + ".githubauth"));
+
+	var gh = new GitHub(GitHubAuth);
+
+	var repo = gh.getRepo("nnmrts", "lapid");
+
+	repo.listTags().then(function(response) {
+
+		let tag_name, name = tag;
+
+		let target_commitish = branch;
+
+		let body = "browser: [lapid.js](../../blob/%t/dist/browser/lapid.js)\nnpm: [lapid.js](../../blob/%t/dist/lapid.js)\nes module: [lapid.js](../../blob/%t/dist/module/lapid.js)".replace("%t", tag);
+
+		let prerelease = yargs.argv["pre-release"];
+
+		return repo.createRelease({
+			tag_name,
+			target_commitish,
+			name,
+			body,
+			draft: false,
+			prerelease
+		}).then(function(response) {
+
+		}).catch(function(e) {
+			cb(e);
+		});
+
+		// repo.updateRelease(response.data[0].id, {
+		// 	body: ""
+		// });
+
+	}).catch(function(e) {
+		cb(e);
+	});
+
+});
 
 gulp.task("default", ["release"]);

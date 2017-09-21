@@ -10,7 +10,7 @@ const resolve = require("rollup-plugin-node-resolve");
 const commonjs = require("rollup-plugin-commonjs");
 
 const fs = require("fs");
-const argv = require("yargs");
+const yargs = require("yargs");
 const path = require("path");
 const semver = require("semver");
 const git = require("gulp-git");
@@ -193,26 +193,26 @@ gulp.task("dev", ["build"], function() {
 // --------------------------------------------------------------
 // --------------------------------------------------------------
 
-let branch = argv.argv.branch || "master";
+let branch = yargs.argv.branch || "master";
 
-let rootDir = path.resolve(argv.argv.rootDir || "./") + "/";
+let rootDir = path.resolve(yargs.argv.rootDir || "./") + "/";
 
 let currVersion = function() {
 	return JSON.parse(fs.readFileSync(rootDir + "package.json")).version;
 };
 
 let preid = function() {
-	if (argv.alpha) {
+	if (yargs.argv.alpha) {
 		return "alpha";
 	}
-	if (argv.beta) {
+	if (yargs.argv.beta) {
 		return "beta";
 	}
-	if (argv.RC) {
+	if (yargs.argv.RC) {
 		return "RC";
 	}
-	if (argv["pre-release"]) {
-		return argv["pre-release"];
+	if (yargs.argv["pre-release"]) {
+		return yarg.argv["pre-release"];
 	}
 	return undefined;
 };
@@ -221,26 +221,30 @@ let versioning = function() {
 	if (preid()) {
 		return "prerelease";
 	}
-	if (argv.minor) {
+	if (yargs.argv.minor) {
 		return "minor";
 	}
-	if (argv.major) {
+	if (yargs.argv.major) {
 		return "major";
 	}
 	return "patch";
 };
 
-gulp.task("commit:build", ["build"], function() {
-	git.add();
+gulp.task("add:build", ["build"], function() {
+	return gulp.src("./*")
+	.pipe(git.add());
+});
 
-	return gulp.src("./package.json", {
+gulp.task("commit:build", function() {
+
+	return gulp.src("./dist/**/*.js", {
 		cwd: rootDir
 	}).pipe(git.commit("Build: generated dist files", {
 		cwd: rootDir
 	}));
 });
 
-gulp.task("bump", ["commit:build"], function() {
+gulp.task("bump", function(resolve) {
 	let newVersion = semver.inc(currVersion(), versioning(), preid());
 
 	git.pull("origin", branch, {
@@ -266,7 +270,7 @@ gulp.task("bump", ["commit:build"], function() {
 
 	let commitMessage = "Build: Bumps version to v" + newVersion;
 
-	return gulp.src("./*.json", {
+	gulp.src("./*.json", {
 		cwd: rootDir
 	}).pipe(git.commit(commitMessage, {
 		cwd: rootDir
@@ -279,7 +283,7 @@ gulp.task("bump", ["commit:build"], function() {
 				console.error(err);
 			}
 			else {
-				// resolve();
+				resolve();
 			}
 		});
 	});
@@ -291,11 +295,7 @@ var tagVersion = function(opts) {
 	if (!opts.key) opts.key = "version";
 	if (typeof opts.prefix === "undefined") opts.prefix = "v";
 	if (typeof opts.push === "undefined") opts.push = true;
-	if (typeof opts.message === "undefined") opts.message = [
-		"browser: [lapid.js](../../blob/%t/dist/browser/lapid.js)",
-		"npm: [lapid.js](../../blob/%t/dist/lapid.js)",
-		"es module: [lapid.js](../../blob/%t/dist/module/lapid.js)"
-	];
+	if (typeof opts.message === "undefined") opts.message = "browser: [lapid.js](../../blob/%t/dist/browser/lapid.js) npm: [lapid.js](../../blob/%t/dist/lapid.js) es module: [lapid.js](../../blob/%t/dist/module/lapid.js)";
 
 	function modifyContents(file, cb) {
 		var version = opts.version;
@@ -308,11 +308,9 @@ var tagVersion = function(opts) {
 		}
 		var tag = opts.prefix + version;
 
-		var message = opts.message;
+		var message = tag;
 
-		message.forEach(function(item, index, array) {
-			item.replace("%t", tag);
-		});
+		gutil.log(message);
 
 		gutil.log("Tagging as: " + gutil.colors.cyan(tag));
 		git.tag(tag, message, {
@@ -328,8 +326,8 @@ var tagVersion = function(opts) {
 	return map(modifyContents);
 };
 
-gulp.task("tag-and-push", ["bump"], function() {
-	return gulp.src("./", {
+gulp.task("tag-and-push", function(done) {
+	gulp.src("./", {
 			cwd: rootDir
 		})
 		.pipe(tagVersion({
@@ -340,18 +338,24 @@ gulp.task("tag-and-push", ["bump"], function() {
 			git.push("origin", branch, {
 				args: "--tags",
 				cwd: rootDir
-			});
+			}, done);
 		});
 });
 
-gulp.task("npm-publish", ["tag-and-push"], function() {
-	return childProcess.spawn("npm", ["publish", rootDir], {
+gulp.task("npm-publish", function(done) {
+	childProcess.spawn("npm", ["publish", rootDir], {
 		stdio: "inherit",
 		shell: true
-	});
+	}).on("close", done)
 });
 
-gulp.task("bump-complete-release", ["npm-publish"]);
+gulp.task("bump-complete-release", ["commit:build"], function() {
+	runSequence(
+		"bump",
+		"tag-and-push",
+		"npm-publish"
+	)
+});
 
 gulp.task("release", ["bump-complete-release"]);
 

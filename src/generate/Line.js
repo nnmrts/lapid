@@ -1,23 +1,21 @@
 "use strict";
 
-import utils from "./utils.js";
-import DEFAULTS from "./generate/DEFAULTS.js";
+import utils from "../utils.js";
+import DEFAULTS from "./DEFAULTS.js";
 
-Line = function(options) {
+let Line = function(options) {
 
-		options = DEFAULTS.line.merge(arguments[0]);
+	options = utils.mergeDeep(DEFAULTS.line, options);
 
-		if (options.rhyme) {
-			console.log("rhyme here");
+	if (options.rhyme) {
+		console.log("rhyme here");
+	}
+	else {
+		console.log("no rhyme here");
+		if (options.limitType === "syllable") {
+
 		}
-		else {
-			console.log("no rhyme here");
-			if (options.limitType === "syllable") {
+	}
+};
 
-			}
-		}
-	};
-
-	export default Line;
-
-	
+export default Line;

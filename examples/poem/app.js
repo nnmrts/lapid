@@ -4,10 +4,6 @@ let examplePoem = angular.module("examplePoem", ["ngMaterial", "ngMessages"]);
 
 examplePoem.controller("ctrl", function ctrl($scope) {
 
-	let generateLines = function(options) {
-
-	};
-
 	$scope.poem = {
 		lines: [],
 		title: "poem title",

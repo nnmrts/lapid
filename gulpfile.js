@@ -231,8 +231,13 @@ let versioning = function() {
 };
 
 gulp.task("commit:build", ["build"], function() {
-	return gulp.src("./dist/**/*.js")
-		.pipe(git.add())
+	return gulp.src("./dist/**/*.js", {
+			cwd: rootDir
+		})
+		.pipe(git.add({
+			cwd: rootDir
+		}))
+
 		.pipe(git.commit("Build: generated dist files", {
 			cwd: rootDir
 		}));

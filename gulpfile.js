@@ -240,7 +240,7 @@ gulp.task("commit:build", ["build"], function() {
 	}));
 });
 
-gulp.task("bump", function(resolve) {
+gulp.task("bump", ["commit:build"], function(resolve) {
 	let newVersion = semver.inc(currVersion(), versioning(), preid());
 
 	git.pull("origin", branch, {
@@ -321,7 +321,8 @@ var tagVersion = function(opts) {
 	return map(modifyContents);
 };
 
-gulp.task("tag-and-push", function(done) {
+gulp.task("tag-and-push", ["bump"], function(done) {
+
 	gulp.src("./", {
 			cwd: rootDir
 		})
@@ -337,22 +338,14 @@ gulp.task("tag-and-push", function(done) {
 		});
 });
 
-gulp.task("npm-publish", function(done) {
+gulp.task("npm-publish", ["tag-and-push"], function(done) {
 	childProcess.spawn("npm", ["publish", rootDir], {
 		stdio: "inherit",
 		shell: true
-	}).on("close", done)
+	}).on("close", done);
 });
 
-gulp.task("bump-tag-publish", ["commit:build"], function() {
-	return runSequence(
-		"bump",
-		"tag-and-push",
-		"npm-publish"
-	);
-});
-
-gulp.task("release", ["bump-tag-publish"], function(cb) {
+gulp.task("release", ["npm-publish"], function(cb) {
 	var GitHubAuth = JSON.parse(fs.readFileSync(rootDir + ".githubauth"));
 
 	var gh = new GitHub(GitHubAuth);

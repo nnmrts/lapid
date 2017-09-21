@@ -232,14 +232,16 @@ let versioning = function() {
 
 gulp.task("commit:build", ["build"], function() {
 	return gulp.src("./dist/**/*.js", {
-			cwd: rootDir
+			cwd: "./"
 		})
 		.pipe(git.add({
-			cwd: rootDir
+			cwd: "./"
+
 		}))
 
 		.pipe(git.commit("Build: generated dist files", {
-			cwd: rootDir
+			cwd: "./"
+
 		}));
 });
 

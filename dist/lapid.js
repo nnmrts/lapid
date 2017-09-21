@@ -1,6 +1,6 @@
 /**
  * lapid - natural language generation and processing done right
- * @version v1.1.3
+ * @version v1.1.4
  * @link https://github.com/nnmrts/lapid
  * @license Unlicense
  */

@@ -231,11 +231,13 @@ let versioning = function() {
 };
 
 gulp.task("commit:build", ["build"], function() {
-	return gulp.src("./*")
-		.pipe(git.add())
-		.pipe(git.commit("Build: generated dist files", {
-			cwd: rootDir
-		}));
+	git.add();
+
+	return gulp.src("./package.json", {
+		cwd: rootDir
+	}).pipe(git.commit("Build: generated dist files", {
+		cwd: rootDir
+	}));
 });
 
 gulp.task("bump", ["commit:build"], function() {

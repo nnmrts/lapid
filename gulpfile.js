@@ -231,12 +231,7 @@ let versioning = function() {
 	return "patch";
 };
 
-gulp.task("add:build", ["build"], function() {
-	return gulp.src("./*")
-		.pipe(git.add());
-});
-
-gulp.task("commit:build", function() {
+gulp.task("commit:build", ["build"], function() {
 
 	return gulp.src("./dist/**/*.js", {
 		cwd: rootDir
@@ -382,8 +377,10 @@ gulp.task("release", ["bump-tag-publish"], function(cb) {
 			draft: false,
 			prerelease
 		}).then(function(response) {
-
+			gutil.log(response);
 		}).catch(function(e) {
+			gutil.log(e);
+
 			cb(e);
 		});
 

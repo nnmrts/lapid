@@ -193,15 +193,6 @@ gulp.task("dev", ["build"], function() {
 // --------------------------------------------------------------
 // --------------------------------------------------------------
 
-gulp.task("commit:build", ["build"], function() {
-	return gulp.src("./*.json", {
-		cwd: rootDir
-	}).pipe(git.commit("Build: generated dist files", {
-		cwd: rootDir
-	}))
-
-});
-
 let branch = argv.argv.branch || "master";
 
 let rootDir = path.resolve(argv.argv.rootDir || "./") + "/";
@@ -239,7 +230,17 @@ let versioning = function() {
 	return "patch";
 };
 
-gulp.task("bump", ["commit:build"], function(resolve) {
+gulp.task("commit:build", ["build"], function() {
+	return gulp.src("./dist/", {
+			cwd: rootDir
+		})
+		.pipe(git.add())
+		.pipe(git.commit("Build: generated dist files", {
+			cwd: rootDir
+		}));
+});
+
+gulp.task("bump", ["commit:build"], function() {
 	let newVersion = semver.inc(currVersion(), versioning(), preid());
 
 	git.pull("origin", branch, {
@@ -278,7 +279,7 @@ gulp.task("bump", ["commit:build"], function(resolve) {
 				console.error(err);
 			}
 			else {
-				resolve();
+				// resolve();
 			}
 		});
 	});
@@ -327,7 +328,7 @@ var tagVersion = function(opts) {
 	return map(modifyContents);
 };
 
-gulp.task("tag-and-push", ["bump"], function(done) {
+gulp.task("tag-and-push", ["bump"], function() {
 	return gulp.src("./", {
 			cwd: rootDir
 		})
@@ -339,17 +340,19 @@ gulp.task("tag-and-push", ["bump"], function(done) {
 			git.push("origin", branch, {
 				args: "--tags",
 				cwd: rootDir
-			}, done);
+			});
 		});
 });
 
-gulp.task("npm-publish", ["tag-and-push"], function(done) {
-	childProcess.spawn("npm", ["publish", rootDir], {
+gulp.task("npm-publish", ["tag-and-push"], function() {
+	return childProcess.spawn("npm", ["publish", rootDir], {
 		stdio: "inherit",
 		shell: true
-	}).on("close", done);
+	});
 });
 
 gulp.task("bump-complete-release", ["npm-publish"]);
 
 gulp.task("release", ["bump-complete-release"]);
+
+gulp.task("default", ["release"]);

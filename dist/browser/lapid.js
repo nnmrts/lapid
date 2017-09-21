@@ -1,4 +1,11 @@
-'use strict';
+/**
+ * lapid - natural language generation and processing done right
+ * @version v1.0.24
+ * @link https://github.com/nnmrts/lapid
+ * @license Unlicense
+ */
+
+"use strict";
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
@@ -8,49 +15,38 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
-(function (global, factory) {
-	(typeof exports === 'undefined' ? 'undefined' : _typeof(exports)) === 'object' && typeof module !== 'undefined' ? module.exports = factory() : typeof define === 'function' && define.amd ? define(factory) : global.lapid = factory();
-})(undefined, function () {
-	'use strict';
+var lapid = function () {
+	
 
-	"use strict";
-
-	var utils = {
-		isObject: function isObject(item) {
-			return item && (typeof item === 'undefined' ? 'undefined' : _typeof(item)) === "object" && !Array.isArray(item);
-		},
-
-		// deep merge objects
-		// https://stackoverflow.com/questions/27936772/how-to-deep-merge-instead-of-shallow-merge
-		// authors: @salakar, @cpill
-
-		mergeDeep: function (_mergeDeep) {
-			function mergeDeep(_x, _x2) {
-				return _mergeDeep.apply(this, arguments);
-			}
-
-			mergeDeep.toString = function () {
-				return _mergeDeep.toString();
-			};
-
-			return mergeDeep;
-		}(function (target, source) {
-
-			var output = Object.assign({}, target);
-			if (utils.isObject(target) && utils.isObject(source)) {
-				Object.keys(source).forEach(function (key) {
-					if (utils.isObject(source[key])) {
-						if (!(key in target)) Object.assign(output, _defineProperty({}, key, source[key]));else output[key] = mergeDeep(target[key], source[key]);
-					} else {
-						Object.assign(output, _defineProperty({}, key, source[key]));
-					}
-				});
-			}
-			return output;
-		})
+	var isObject = function isObject(item) {
+		return item && (typeof item === "undefined" ? "undefined" : _typeof(item)) === "object" && !Array.isArray(item);
 	};
 
-	"use strict";
+	// deep merge objects
+	// https://stackoverflow.com/questions/27936772/how-to-deep-merge-instead-of-shallow-merge
+	// authors: @salakar, @cpill
+
+	var mergeDeep = function mergeDeep(target, source) {
+
+		var output = Object.assign({}, target);
+		if (utils.isObject(target) && utils.isObject(source)) {
+
+			Object.keys(source).forEach(function (key) {
+				if (utils.isObject(source[key])) {
+
+					if (!(key in target)) Object.assign(output, _defineProperty({}, key, source[key]));else output[key] = mergeDeep(target[key], source[key]);
+				} else {
+					Object.assign(output, _defineProperty({}, key, source[key]));
+				}
+			});
+		}
+		return output;
+	};
+
+	var utils = {
+		isObject: isObject,
+		mergeDeep: mergeDeep
+	};
 
 	var DEFAULTS = {};
 
@@ -96,7 +92,16 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
 		line: DEFAULTS.line
 	};
 
-	"use strict";
+	var Line = function Line(options) {
+
+		options = utils.mergeDeep(DEFAULTS.line, options);
+
+		if (options.rhyme) {
+			console.log("rhyme here");
+		} else {
+			console.log("no rhyme here");
+		}
+	};
 
 	/**
   * 
@@ -121,7 +126,7 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
 
 
 		_createClass(Scheme, null, [{
-			key: 'expand',
+			key: "expand",
 			value: function expand(linesCount, keep) {
 				if (keep) {
 					var addition = this.scheme.length - linesCount;
@@ -146,7 +151,7 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
     */
 
 		}, {
-			key: 'shorten',
+			key: "shorten",
 			value: function shorten(linesCount) {
 				this.scheme.splice(linesCount);
 			}
@@ -155,87 +160,55 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
 		return Scheme;
 	}();
 
-	"use strict";
+	var Lines = function Lines(options) {
 
-	var generate = {
-		Line: function Line(options) {
-			options = DEFAULTS.line.merge(arguments[0]);
+		options = utils.mergeDeep(DEFAULTS.lines, options);
+
+		var currentScheme;
+
+		if (options.rhyme) {
+
+			currentScheme = new Scheme(options.scheme.string);
+
+			if (currentScheme.scheme.length < options.linesCount) {
+				currentScheme.expand(options.linesCount, options.scheme.keep);
+			} else if (currentScheme.scheme.length > options.linesCount) {
+				currentScheme.shorten(options.linesCount);
+			}
+		}
+
+		this.text = "";
+
+		for (var i = 0; i < options.linesCount; i++) {
+
+			var lineOptions = options.line;
+
+			lineOptions.index = i;
 
 			if (options.rhyme) {
-				console.log("rhyme here");
-			} else {
-				console.log("no rhyme here");
-			}
-		},
-
-		Lines: function Lines(options) {
-
-			// options = DEFAULTS.lines.merge(arguments[0]);
-
-			options = utils.mergeDeep(DEFAULTS.lines, options);
-
-			var currentScheme;
-
-			if (options.rhyme) {
-
-				currentScheme = new Scheme(options.scheme.string);
-
-				if (currentScheme.scheme.length < options.linesCount) {
-					currentScheme.expand(options.linesCount, options.scheme.keep);
-				} else if (currentScheme.scheme.length > options.linesCount) {
-					currentScheme.shorten(options.linesCount);
-				}
+				lineOptions.rhyme = currentScheme.scheme[i];
 			}
 
-			this.text = "";
+			this[i] = new lapid.generate.Line(lineOptions);
 
-			for (var i = 0; i < options.linesCount; i++) {
-
-				var lineOptions = options.line;
-
-				lineOptions.index = i;
-
-				if (options.rhyme) {
-					lineOptions.rhyme = currentScheme.scheme[i];
-				}
-
-				this[i] = new lapid.generate.Line(lineOptions);
-
-				this.text += this[i].text + "\n";
-			}
+			this.text += this[i].text + "\n";
 		}
 	};
 
-	"use strict";
-
-	"use strict";
+	var generate = {
+		Line: Line,
+		Lines: Lines
+	};
 
 	var process = {};
 
-	"use strict";
-
-	(function () {
-		var childProcess = require("child_process");
-		var oldSpawn = childProcess.spawn;
-
-		function mySpawn() {
-			console.log('spawn called');
-			console.log(arguments);
-			var result = oldSpawn.apply(this, arguments);
-			return result;
-		}
-		childProcess.spawn = mySpawn;
-	})();
-
-	// HELPER FUNCTIONS
-
-	// ---------------------
-
-	var lapid$1 = function lapid$1() {
-		this.LANGUAGE = "de";
-		this.generate = generate;
-		this.process = process;
+	var _lapid = {
+		LANGUAGE: "de",
+		generate: generate,
+		process: process
 	};
 
-	return lapid$1;
-});
+	window.lapid = _lapid;
+
+	return _lapid;
+}();

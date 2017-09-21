@@ -1,41 +1,49 @@
-'use strict';
+/**
+ * lapid - natural language generation and processing done right
+ * @version v1.0.24
+ * @link https://github.com/nnmrts/lapid
+ * @license Unlicense
+ */
 
 "use strict";
 
-let utils = {
-	isObject: function(item) {
-		return (item && typeof item === "object" && !Array.isArray(item));
-	},
+let isObject = function(item) {
+	return (item && typeof item === "object" && !Array.isArray(item));
+};
 
-	// deep merge objects
-	// https://stackoverflow.com/questions/27936772/how-to-deep-merge-instead-of-shallow-merge
-	// authors: @salakar, @cpill
+// deep merge objects
+// https://stackoverflow.com/questions/27936772/how-to-deep-merge-instead-of-shallow-merge
+// authors: @salakar, @cpill
 
-	mergeDeep: function(target, source) {
+let mergeDeep = function(target, source) {
 
-		let output = Object.assign({}, target);
-		if (utils.isObject(target) && utils.isObject(source)) {
-			Object.keys(source).forEach(key => {
-				if (utils.isObject(source[key])) {
-					if (!(key in target))
-						Object.assign(output, {
-							[key]: source[key]
-						});
-					else
-						output[key] = mergeDeep(target[key], source[key]);
-				}
-				else {
+	let output = Object.assign({}, target);
+	if (utils.isObject(target) && utils.isObject(source)) {
+
+		Object.keys(source).forEach(key => {
+			if (utils.isObject(source[key])) {
+
+				if (!(key in target))
 					Object.assign(output, {
 						[key]: source[key]
 					});
-				}
-			});
-		}
-		return output;
+				else
+					output[key] = mergeDeep(target[key], source[key]);
+			}
+			else {
+				Object.assign(output, {
+					[key]: source[key]
+				});
+			}
+		});
 	}
+	return output;
 };
 
-"use strict";
+let utils = {
+	isObject,
+	mergeDeep
+};
 
 let DEFAULTS = {};
 
@@ -81,7 +89,18 @@ DEFAULTS.lines = {
 	line: DEFAULTS.line
 };
 
-"use strict";
+let Line = function(options) {
+
+	options = utils.mergeDeep(DEFAULTS.line, options);
+
+	if (options.rhyme) {
+		console.log("rhyme here");
+	}
+	else {
+		console.log("no rhyme here");
+		
+	}
+};
 
 /**
  * 
@@ -133,93 +152,59 @@ let Scheme = class {
 
 };
 
-"use strict";
+let Lines = function(options) {
 
-let generate = {
-	Line: function(options) {
-		options = DEFAULTS.line.merge(arguments[0]);
+	options = utils.mergeDeep(DEFAULTS.lines, options);
 
-		if (options.rhyme) {
-			console.log("rhyme here");
+	var currentScheme;
+
+	if (options.rhyme) {
+
+		currentScheme = new Scheme(options.scheme.string);
+
+		if (currentScheme.scheme.length < options.linesCount) {
+			currentScheme.expand(options.linesCount, options.scheme.keep);
 		}
-		else {
-			console.log("no rhyme here");
-			
-		}
-	},
-
-	Lines: function(options) {
-
-		// options = DEFAULTS.lines.merge(arguments[0]);
-
-		options = utils.mergeDeep(DEFAULTS.lines, options);
-
-		var currentScheme;
-
-		if (options.rhyme) {
-
-			currentScheme = new Scheme(options.scheme.string);
-
-			if (currentScheme.scheme.length < options.linesCount) {
-				currentScheme.expand(options.linesCount, options.scheme.keep);
-			}
-			else if (currentScheme.scheme.length > options.linesCount) {
-				currentScheme.shorten(options.linesCount);
-			}
-
-		}
-
-		this.text = "";
-
-		for (let i = 0; i < options.linesCount; i++) {
-
-			var lineOptions = options.line;
-
-			lineOptions.index = i;
-
-			if (options.rhyme) {
-				lineOptions.rhyme = currentScheme.scheme[i];
-			}
-
-			this[i] = new lapid.generate.Line(lineOptions);
-
-			this.text += this[i].text + "\n";
+		else if (currentScheme.scheme.length > options.linesCount) {
+			currentScheme.shorten(options.linesCount);
 		}
 
 	}
+
+	this.text = "";
+
+	for (let i = 0; i < options.linesCount; i++) {
+
+		var lineOptions = options.line;
+
+		lineOptions.index = i;
+
+		if (options.rhyme) {
+			lineOptions.rhyme = currentScheme.scheme[i];
+		}
+
+		this[i] = new lapid.generate.Line(lineOptions);
+
+		this.text += this[i].text + "\n";
+	}
+
 };
 
-"use strict";
-
-"use strict";
+let generate = {
+	Line,
+	Lines
+};
 
 let process = {
 
 };
 
-"use strict";
-
-(function() {
-	var childProcess = require("child_process");
-	var oldSpawn = childProcess.spawn;
-
-	function mySpawn() {
-		console.log('spawn called');
-		console.log(arguments);
-		var result = oldSpawn.apply(this, arguments);
-		return result;
-	}
-	childProcess.spawn = mySpawn;
-})();
-
-// HELPER FUNCTIONS
-
-// ---------------------
-
-let lapid$1 = function() {
-	this.LANGUAGE = "de";
-	this.generate = generate;
-	this.process = process;
+let _lapid = {
+	LANGUAGE: "de",
+	generate,
+	process
 };
 
-module.exports = lapid$1;
+window.lapid = _lapid;
+
+module.exports = _lapid;

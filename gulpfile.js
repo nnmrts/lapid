@@ -32,19 +32,7 @@ const del = require("del");
 const removeUseStrict = require("gulp-remove-use-strict");
 const moment = require("moment");
 const GitHub = require("github-api");
-
-gulp.task("minify", function() {
-	gulp.src("dist/browser/lapid.js")
-		.pipe(minify({
-			ext: {
-				src: "-debug.js",
-				min: ".min.js"
-			},
-			noSource: false
-		}))
-		.pipe(gulp.dest("./dist/browser/"));
-
-});
+const nodeCleanup = require('node-cleanup');
 
 var tasks = {
 	build: {}
@@ -118,7 +106,18 @@ gulp.task("babel", ["rollup:browser", "rollup:main", "rollup:module"], function(
 		.pipe(gulp.dest(pkg.browser.replace("/lapid.js", "")));
 });
 
-gulp.task("remove-stricts:dist", ["babel"], function() {
+gulp.task("minify", ["babel"], function() {
+	return gulp.src(pkg.browser)
+		.pipe(minify({
+			ext: {
+				min: ".min.js"
+			},
+			noSource: true
+		}))
+		.pipe(gulp.dest(pkg.browser.replace("/lapid.js", "")));
+});
+
+gulp.task("remove-stricts:dist", ["minify"], function() {
 	return gulp.src("./dist/**/*.js", {
 			base: "./dist/"
 		})
@@ -167,12 +166,103 @@ gulp.task("build", ["finalize"], function() {
 	gutil.log(gutil.colors.green("build took: " + tasks.build.took + " seconds"));
 });
 
-gulp.task("dev", ["build"], function() {
+gulp.task("backup:dist", ["remove-stricts:.tmp"], function() {
+
+	return gulp.src("./dist/**/*.js", {
+			base: "./dist/"
+		})
+		.pipe(gulp.dest("./dist-backup/"));
+});
+
+gulp.task("rollup:dev", ["backup:dist"], function() {
+
+	return rollup({
+			input: "./.tmp/main.js",
+			name: pkg.name,
+			format: "iife",
+			plugins: [
+				resolve(),
+				commonjs(),
+			]
+		})
+		.pipe(source("lapid.js"))
+		.pipe(gulp.dest(pkg.browser.replace("/lapid.js", "")));
+});
+
+gulp.task("babel:dev", ["rollup:dev"], function() {
+
+	return gulp.src(pkg.browser)
+		.pipe(babel())
+		.pipe(gulp.dest(pkg.browser.replace("/lapid.js", "")));
+});
+
+gulp.task("minify:dev", ["babel:dev"], function() {
+
+	return gulp.src(pkg.browser)
+		.pipe(minify({
+			ext: {
+				min: ".min.js"
+			},
+			noSource: true
+		}))
+		.pipe(gulp.dest(pkg.browser.replace("/lapid.js", "")));
+});
+
+gulp.task("remove-stricts:dev", ["minify"], function() {
+
+	return gulp.src("./dist/**/*.js", {
+			base: "./dist/"
+		})
+		.pipe(replace(/"use strict";/, ""))
+		.pipe(replace(/'use strict';/, ""))
+		.pipe(gulp.dest("./dist/"));
+});
+
+gulp.task("add-stricts:dev", ["remove-stricts:dev"], function() {
+
+	return gulp.src("./dist/**/*.js", {
+			base: "./dist/"
+		})
+		.pipe(header("\n\"use strict\";"))
+		.pipe(gulp.dest("./dist/"));
+});
+
+gulp.task("header:dev", ["add-stricts:dev"], function() {
+
+	return gulp.src("./dist/**/*.js", {
+			base: "./dist/"
+		})
+		.pipe(header(fs.readFileSync('.header.js', 'utf8'), {
+			pkg
+		}))
+		.pipe(gulp.dest("./dist/"));
+});
+
+gulp.task("finalize:dev", ["header:dev"], function() {
+
+	gulp.start("clean:.tmp");
+
+	return gulp.src("./dist/**/*.js", {
+			base: "./dist/"
+		})
+		.pipe(gulp.dest("./dist/"));
+});
+
+gulp.task("build:dev", ["header:dev"], function() {
+	tasks.build.finished = moment();
+
+	tasks.build.took = tasks.build.finished.diff(tasks.build.started, "seconds", true);
+
+	gutil.log(gutil.colors.green("build took: " + tasks.build.took + " seconds"));
+});
+
+gulp.task("dev", ["build:dev"], function() {
+
 	var server = gls.static("./", 8000);
 	server.start();
 
 	gulp.watch("src/**/*.js", [
-		"build",
+		"build:dev",
 		function(file) {
 			server.notify.apply(server, [file]);
 		}
@@ -383,3 +473,15 @@ gulp.task("release", ["npm-publish"], function(cb) {
 });
 
 gulp.task("default", ["release"]);
+
+gulp.task("restore:dist", ["clean:dist"], function() {
+	return gulp.src("./dist-backup/**/*.js", {
+			base: "./dist-backup/"
+		})
+		.pipe(gulp.dest("./dist/"));
+
+});
+
+nodeCleanup(function(exitCode, signal) {
+	gulp.start("restore:dist");
+});

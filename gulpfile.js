@@ -361,14 +361,15 @@ gulp.task("release", ["bump-tag-publish"], function(cb) {
 
 	repo.listTags().then(function(response) {
 
-		let tag_name, name = "v" + currVersion();
+		let tag_name = "v" + currVersion();
 
 		let target_commitish = branch;
 
-		let body = "browser: [lapid.js](../../blob/%t/dist/browser/lapid.js)\nnpm: [lapid.js](../../blob/%t/dist/lapid.js)\nes module: [lapid.js](../../blob/%t/dist/module/lapid.js)".replace("%t", tag_name);
+		let name = tag_name;
+
+		let body = "browser: [lapid.js](../../blob/%t/dist/browser/lapid.js)\nnpm: [lapid.js](../../blob/%t/dist/lapid.js)\nes module: [lapid.js](../../blob/%t/dist/module/lapid.js)".replace(/%t/g, tag_name);
 
 		let prerelease = versioning() === "prerelease";
-
 
 		return repo.createRelease({
 			tag_name,

@@ -32,7 +32,8 @@ const del = require("del");
 const removeUseStrict = require("gulp-remove-use-strict");
 const moment = require("moment");
 const GitHub = require("github-api");
-const nodeCleanup = require('node-cleanup');
+const nodeCleanup = require("node-cleanup");
+const chokidar = require('chokidar');
 
 var tasks = {
 	build: {}
@@ -41,9 +42,7 @@ var tasks = {
 gulp.task("prebuild", function() {
 	tasks.build.started = moment();
 
-	return gulp.src("./src/**/*.js", {
-			base: "./src/"
-		})
+	return gulp.src("./src/**/*.js")
 		.pipe(gulp.dest("./.tmp/"));
 });
 
@@ -55,10 +54,6 @@ gulp.task("remove-stricts:.tmp", ["prebuild"], function() {
 		.pipe(replace(/"use strict";/, ""))
 		.pipe(replace(/'use strict';/, ""))
 		.pipe(gulp.dest("./.tmp/"));
-});
-
-gulp.task("clean:dist", function() {
-	return del("dist");
 });
 
 gulp.task("rollup:browser", ["remove-stricts:.tmp"], function() {
@@ -138,7 +133,7 @@ gulp.task("header", ["add-stricts:dist"], function() {
 	return gulp.src("./dist/**/*.js", {
 			base: "./dist/"
 		})
-		.pipe(header(fs.readFileSync('.header.js', 'utf8'), {
+		.pipe(header(fs.readFileSync(".header.js", "utf8"), {
 			pkg
 		}))
 		.pipe(gulp.dest("./dist/"));
@@ -201,6 +196,7 @@ gulp.task("minify:dev", ["babel:dev"], function() {
 	return gulp.src(pkg.browser)
 		.pipe(minify({
 			ext: {
+				src: "-debug.js",
 				min: ".min.js"
 			},
 			noSource: true
@@ -208,7 +204,7 @@ gulp.task("minify:dev", ["babel:dev"], function() {
 		.pipe(gulp.dest(pkg.browser.replace("/lapid.js", "")));
 });
 
-gulp.task("remove-stricts:dev", ["minify"], function() {
+gulp.task("remove-stricts:dev", ["minify:dev"], function() {
 
 	return gulp.src("./dist/**/*.js", {
 			base: "./dist/"
@@ -232,7 +228,7 @@ gulp.task("header:dev", ["add-stricts:dev"], function() {
 	return gulp.src("./dist/**/*.js", {
 			base: "./dist/"
 		})
-		.pipe(header(fs.readFileSync('.header.js', 'utf8'), {
+		.pipe(header(fs.readFileSync(".header.js", "utf8"), {
 			pkg
 		}))
 		.pipe(gulp.dest("./dist/"));
@@ -248,7 +244,7 @@ gulp.task("finalize:dev", ["header:dev"], function() {
 		.pipe(gulp.dest("./dist/"));
 });
 
-gulp.task("build:dev", ["header:dev"], function() {
+gulp.task("build:dev", ["finalize:dev"], function() {
 	tasks.build.finished = moment();
 
 	tasks.build.took = tasks.build.finished.diff(tasks.build.started, "seconds", true);
@@ -256,28 +252,78 @@ gulp.task("build:dev", ["header:dev"], function() {
 	gutil.log(gutil.colors.green("build took: " + tasks.build.took + " seconds"));
 });
 
-gulp.task("dev", ["build:dev"], function() {
+var server = gls.static("./", 8000);
 
-	var server = gls.static("./", 8000);
+gulp.task("start-server", ["build:dev"], function() {
 	server.start();
+});
 
-	gulp.watch("src/**/*.js", [
-		"build:dev",
-		function(file) {
-			server.notify.apply(server, [file]);
-		}
-	]);
+gulp.task("watch:src", ["start-server"], function() {
+	var type = "";
 
-	gulp.watch("dist/**/*.js",
-		function(file) {
-			server.notify.apply(server, [file]);
-		}
-	);
+	return chokidar.watch("dist/**/*.js")
+		.on("add", function(path, stats) {
+			type = "added";
+		})
+		.on("change", function(path, stats) {
+			type = "changed";
 
-	gulp.watch("examples/**/*",
-		function(file) {
-			server.notify.apply(server, [file]);
+		}).on("unlink", function(path, stats) {
+			type = "deleted";
+
+		}).on("ready", function(path, stats) {
+			gulp.start("build:dev");
+
 		});
+
+});
+
+gulp.task("watch:dist", ["start-server"], function() {
+	var type = "";
+
+	return chokidar.watch("dist/**/*.js")
+		.on("add", function(path, stats) {
+			type = "added";
+		})
+		.on("change", function(path, stats) {
+			type = "changed";
+
+		}).on("unlink", function(path, stats) {
+			type = "deleted";
+
+		}).on("ready", function(path, stats) {
+			server.notify.apply(server, [{
+				type,
+				path
+			}]);
+		});
+
+});
+
+gulp.task("watch:examples", ["start-server"], function() {
+	var type = "";
+
+	return chokidar.watch("examples/**/*")
+		.on("add", function(path, stats) {
+			type = "added";
+		})
+		.on("change", function(path, stats) {
+			type = "changed";
+
+		}).on("unlink", function(path, stats) {
+			type = "deleted";
+
+		}).on("ready", function(path, stats) {
+			server.notify.apply(server, [{
+				type,
+				path
+			}]);
+		});
+
+});
+
+gulp.task("dev", ["watch:src", "watch:dist", "watch:examples"], function() {
+
 });
 
 // --------------------------------------------------------------
@@ -474,14 +520,42 @@ gulp.task("release", ["npm-publish"], function(cb) {
 
 gulp.task("default", ["release"]);
 
+gulp.task("clean:dist", function() {
+	return del("dist");
+});
+
 gulp.task("restore:dist", ["clean:dist"], function() {
 	return gulp.src("./dist-backup/**/*.js", {
 			base: "./dist-backup/"
 		})
 		.pipe(gulp.dest("./dist/"));
+});
 
+gulp.task("clean:dist-backup", ["restore:dist"], function() {
+	return del("dist-backup");
+});
+
+var cleanSignal;
+
+gulp.task("kill-process", ["clean:dist-backup"], function() {
+	return process.kill(process.pid, cleanSignal);
 });
 
 nodeCleanup(function(exitCode, signal) {
-	gulp.start("restore:dist");
+
+	if (signal) {
+
+		cleanSignal = signal;
+
+		server.stop();
+
+		gulp.start("kill-process");
+
+		nodeCleanup.uninstall(); // don't call cleanup handler again 
+		return false;
+	}
+
+}, {
+	ctrl_C: "{^C}",
+	uncaughtException: "Uh oh. Look what happened:"
 });

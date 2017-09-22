@@ -7,7 +7,8 @@
 		"console": true,
 		"lpd": true,
 		"lapid": true,
-		"require": true
+		"require": true,
+		"process": true
 	},
 	"esversion": 6,
 	"strict": "global"

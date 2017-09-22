@@ -495,7 +495,7 @@ gulp.task("release", ["npm-publish"], function(cb) {
 
 		let name = tag_name;
 
-		let body = "browser: [lapid.js](../../blob/%t/dist/browser/lapid.js)\nnpm: [lapid.js](../../blob/%t/dist/lapid.js)\nes module: [lapid.js](../../blob/%t/dist/module/lapid.js)".replace(/%t/g, tag_name);
+		let body = "browser: [lapid.js](https://raw.githubusercontent.com/nnmrts/lapid/%t/dist/browser/lapid.js)\nnpm: [lapid.js](https://raw.githubusercontent.com/nnmrts/lapid/%t/dist/lapid.js)\nes module: [lapid.js](https://raw.githubusercontent.com/nnmrts/lapid/%t/dist/module/lapid.js)".replace(/%t/g, tag_name);
 
 		let prerelease = versioning() === "prerelease";
 

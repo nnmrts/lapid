@@ -1,0 +1,26 @@
+{
+	"extends": "../.eslintrc",
+	"env": {
+		"browser": true
+	},
+	"parserOptions": {
+		"ecmaVersion": 5,
+		"sourceType": "script",
+		"ecmaFeatures": {
+			"impliedStrict": false
+		}
+	},
+	"rules": {
+		"func-names": "off",
+		"no-var": "off",
+		"prefer-arrow-callback": "off",
+		"prefer-template": "off"
+	},
+	"plugins": ["angular"],
+	"globals": {
+		"angular": true,
+		"lapid": true,
+		"$": true,
+		"jQuery": true
+	}
+}

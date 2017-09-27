@@ -1,0 +1,59 @@
+{
+	"extends": "airbnb-base",
+	"env": {
+		"browser": true
+	},
+	"parserOptions": {
+		"sourceType": "module"
+	},
+	"rules": {
+		"no-tabs": "off",
+		"quotes": ["error", "double"],
+		"indent": ["error", "tab"],
+		"comma-dangle": "off",
+		"linebreak-style": "off",
+		"import/extensions": ["error", "always"],
+		"space-before-function-paren": ["error", "never"],
+		"brace-style": ["error", "stroustrup"],
+		"no-plusplus": ["error", {
+			"allowForLoopAfterthoughts": true
+		}],
+		"no-await-in-loop": "off",
+		"func-names": ["error", "never"],
+		"no-param-reassign": ["error", {
+			"props": false
+		}],
+		"prefer-destructuring": "off",
+		"object-shorthand": ["error", "properties"],
+		"function-paren-newline": ["error", {
+			"minItems": 4
+		}],
+		"curly": ["error", "all"],
+		"require-jsdoc": ["error", {
+			"require": {
+				"FunctionDeclaration": true,
+				"MethodDefinition": true,
+				"ClassDeclaration": true,
+				"ArrowFunctionExpression": true
+			}
+		}],
+
+		"valid-jsdoc": ["error", {
+			"prefer": {
+				"arg": "param",
+				"argument": "param",
+				"return": "returns"
+			},
+			"preferType": {
+				"Boolean": "boolean",
+				"Number": "number",
+				"String": "string"
+			},
+			"requireReturn": false,
+			"requireReturnType": true,
+			"matchDescription": ".+",
+			"requireParamDescription": true,
+			"requireReturnDescription": true
+		}]
+	}
+}

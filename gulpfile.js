@@ -450,6 +450,7 @@ const tagVersion = function(newOptions) {
 				if (err) {
 					throw err;
 				}
+				cb();
 			}
 		);
 

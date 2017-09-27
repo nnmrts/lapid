@@ -450,19 +450,18 @@ const tagVersion = function(newOptions) {
 				if (err) {
 					throw err;
 				}
-				cb();
-			}
-		);
 
-		git.tag(
-			tag, "", {
-				args: " -v",
-				cwd: opts.cwd
-			}, (err) => {
-				if (err) {
-					throw err;
-				}
-				cb();
+				git.tag(
+					tag, "", {
+						args: " -v",
+						cwd: opts.cwd
+					}, (innerErr) => {
+						if (innerErr) {
+							throw innerErr;
+						}
+						cb();
+					}
+				);
 			}
 		);
 	}

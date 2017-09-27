@@ -1,8 +1,11 @@
-"use strict";
+const DEFAULTS = {};
 
-let DEFAULTS = {};
+DEFAULTS.letter = {
+
+};
 
 DEFAULTS.ngram = {
+	limit: 4,
 	letter: DEFAULTS.letter
 };
 
@@ -11,6 +14,7 @@ DEFAULTS.syllable = {
 };
 
 DEFAULTS.word = {
+	limit: 5,
 	ngram: DEFAULTS.ngram,
 };
 
@@ -24,8 +28,8 @@ DEFAULTS.sentence = {
 DEFAULTS.line = {
 	index: 0,
 	rhyme: null,
-	limit: 7,
-	limitType: "syllable",
+	limit: 25,
+	limitType: "letter",
 	syllable: DEFAULTS.syllable,
 	word: DEFAULTS.word
 };
@@ -35,7 +39,7 @@ DEFAULTS.text = {
 };
 
 DEFAULTS.lines = {
-	linesCount: 4,
+	limit: 4,
 	rhyme: false,
 	scheme: {
 		keep: true,

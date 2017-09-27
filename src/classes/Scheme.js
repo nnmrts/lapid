@@ -1,29 +1,27 @@
-"use strict";
-
 /**
- * 
- * 
- * @param {any} string 
+ *
+ *
+ * @param {any} string
  */
-let Scheme = class {
+const Scheme = class {
 	constructor(string) {
 		this.string = string;
 		this.scheme = string.split("");
 	}
 
 	/**
-	 * 
-	 * 
-	 * @param {any} linesCount 
-	 * @param {any} keep 
+	 *
+	 *
+	 * @param {any} linesCount
+	 * @param {any} keep
 	 * @readonly
 	 */
 	static expand(linesCount, keep) {
 		if (keep) {
-			let addition = this.scheme.length - linesCount;
+			const addition = this.scheme.length - linesCount;
 
 			for (let i = 0; i < addition; i++) {
-				var currentIndex = i;
+				let currentIndex = i;
 
 				if (i + 1 > this.scheme.length) {
 					currentIndex = i - this.scheme.length;
@@ -37,19 +35,17 @@ let Scheme = class {
 
 			}
 		}
-
 	}
 
 	/**
-	 * 
-	 * 
-	 * @param {any} linesCount 
+	 *
+	 *
+	 * @param {any} linesCount
 	 * @readonly
 	 */
 	static shorten(linesCount) {
 		this.scheme.splice(linesCount);
 	}
-
 };
 
 export default Scheme;

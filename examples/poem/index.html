@@ -57,9 +57,9 @@
 
 						<md-input-container>
 							<label>lines</label>
-							<input name="linesCount" type="number" min="1" max="16" ng-model="settings.linesCount" required>
+							<input name="limit" type="number" min="1" max="16" ng-model="settings.limit" required>
 
-							<div ng-messages="settingsForm.linesCount.$error" role="alert" multiple>
+							<div ng-messages="settingsForm.limit.$error" role="alert" multiple>
 								<div ng-message="required">no line number given</div>
 								<div ng-message="min">line number to low</div>
 								<div ng-message="max">line number to high</div>

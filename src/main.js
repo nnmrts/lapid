@@ -1,14 +1,24 @@
-"use strict";
+import "babel-polyfill/dist/polyfill.min.js";
 
-import generate from './generate.js';
-import process from './process.js';
+import generate from "./generate.js";
+import process from "./process.js";
+import language from "./language.js";
 
-let _lapid = {
-	LANGUAGE: "de",
+const lapid = {
 	generate,
-	process
+	process,
+	language,
+
+	/**
+	 * init function for lapid
+	 * @param {any} languageId iso languae code
+	 */
+	init: (languageId) => {
+		lapid.language.id = languageId;
+		lapid.language.getLanguage();
+	}
 };
 
-window.lapid = _lapid;
+window.lapid = lapid;
 
-export default _lapid;
+export default lapid;

@@ -1,5 +1,3 @@
-"use strict";
-
-let DEFAULTS = {};
+const DEFAULTS = {};
 
 export default DEFAULTS;

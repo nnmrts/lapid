@@ -1,19 +1,20 @@
 "use strict";
 
-let examplePoem = angular.module("examplePoem", ["ngMaterial", "ngMessages"]);
+var examplePoem = angular.module("examplePoem", ["ngMaterial", "ngMessages"]);
 
 examplePoem.controller("ctrl", function ctrl($scope) {
+	lapid.init("de");
 
 	$scope.poem = {
 		lines: [],
 		title: "poem title",
 		generate: function() {
-			lapid.LANGUAGE = $scope.settings.language;
-			this.text = new lapid.generate.Lines({
-				linesCount: $scope.settings.linesCount,
-				rhyme: $scope.settings.rhyme,
-				scheme: $scope.settings.scheme
-			}).text;
+			lapid.generate.Lines($scope.settings).then(function(result) {
+				console.log(result.text);
+				$scope.poem.text = result.text;
+
+				$scope.$applyAsync();
+			});
 		}
 	};
 
@@ -26,12 +27,15 @@ examplePoem.controller("ctrl", function ctrl($scope) {
 	}];
 
 	$scope.settings = {
-		language: $scope.languages[0],
-		linesCount: 4,
+		language: $scope.languages[0].code,
+		limit: 4,
 		rhyme: false,
 		scheme: {
 			keep: true,
 			string: "aabb"
+		},
+		line: {
+			limitType: "word"
 		}
 
 	};

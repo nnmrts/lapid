@@ -1,46 +1,74 @@
-"use strict";
-
 import utils from "../utils.js";
 import DEFAULTS from "./DEFAULTS.js";
 
 import Scheme from "../classes/Scheme.js";
 
-let Lines = function(options) {
+import Line from "./Line.js";
 
-	options = utils.mergeDeep(DEFAULTS.lines, options);
+const Lines = function(newOptions) {
+	return new Promise((resolveLines) => {
+		const options = utils.mergeDeep(DEFAULTS.lines, newOptions);
 
-	var currentScheme;
+		const lineOptions = {
+			parent: (() => this)()
+		};
 
-	if (options.rhyme) {
+		this.text = "";
 
-		currentScheme = new Scheme(options.scheme.string);
-
-		if (currentScheme.scheme.length < options.linesCount) {
-			currentScheme.expand(options.linesCount, options.scheme.keep);
-		}
-		else if (currentScheme.scheme.length > options.linesCount) {
-			currentScheme.shorten(options.linesCount);
-		}
-
-	}
-
-	this.text = "";
-
-	for (let i = 0; i < options.linesCount; i++) {
-
-		var lineOptions = options.line;
-
-		lineOptions.index = i;
+		let currentScheme;
 
 		if (options.rhyme) {
-			lineOptions.rhyme = currentScheme.scheme[i];
+			currentScheme = new Scheme(options.scheme.string);
+
+			if (currentScheme.scheme.length < options.limit) {
+				currentScheme.expand(options.limit, options.scheme.keep);
+			}
+			else if (currentScheme.scheme.length > options.limit) {
+				currentScheme.shorten(options.limit);
+			}
 		}
 
-		this[i] = new lapid.generate.Line(lineOptions);
+		console.log(`lines limit ${options.limit}`);
 
-		this.text += this[i].text + "\n";
-	}
+		(async() => {
+			for (let i = 0; i < options.limit; i++) {
+				lineOptions.finished = false;
+				lineOptions.index = i;
 
+				await new Promise((resolveLine) => {
+					this[i] = new Line(lineOptions, resolveLine);
+				}).then(() => {
+					this.text += `${this[i].text}\n`;
+				});
+			}
+
+			resolveLines(this);
+		})();
+
+		// if (options.limit > 0) {
+		// 	this[0] = new Line(lineOptions);
+		// }
+
+		// if (!this.text) {}
+		// else {
+
+		// }
+
+		// for (let i = 0; i < options.limit; i++) {
+
+		// 	lineOptions.index = i;
+
+		// 	if (options.rhyme) {
+		// 		lineOptions.rhyme = currentScheme.scheme[i];
+		// 	}
+
+		// 	console.log(lineOptions);
+
+		// 	this[i] = new Line(lineOptions);
+
+		// 	this.text += this[i].text + "\n";
+		// }
+	});
 };
 
 export default Lines;

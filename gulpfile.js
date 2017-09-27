@@ -456,7 +456,7 @@ const tagVersion = function(newOptions) {
 
 		git.tag(
 			tag, "", {
-				args: "-v",
+				args: " -v",
 				cwd: opts.cwd
 			}, (err) => {
 				if (err) {

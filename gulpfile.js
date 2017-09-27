@@ -1,7 +1,6 @@
-"use strict";
+/* eslint-env node */
 
 const gulp = require("gulp");
-const runSequence = require("run-sequence");
 
 const rollup = require("rollup-stream");
 const source = require("vinyl-source-stream");
@@ -20,7 +19,6 @@ const gutil = require("gulp-util");
 const map = require("map-stream");
 const childProcess = require("child_process");
 const babel = require("gulp-babel");
-const rollupBabel = require("rollup-plugin-babel");
 
 const pkg = require("./package.json");
 
@@ -29,171 +27,168 @@ const replace = require("gulp-replace");
 const header = require("gulp-header");
 const minify = require("gulp-minify");
 const del = require("del");
-const removeUseStrict = require("gulp-remove-use-strict");
 const moment = require("moment");
 const GitHub = require("github-api");
 const nodeCleanup = require("node-cleanup");
-const chokidar = require('chokidar');
+const chokidar = require("chokidar");
+const jsdoc = require("gulp-jsdoc3");
 
-var tasks = {
+const jsdocConfig = require("./.jsdoc.json");
+
+const tasks = {
 	build: {}
 };
 
-gulp.task("prebuild", function() {
+gulp.task("prebuild", () => {
 	tasks.build.started = moment();
 
-	return gulp.src("./src/**/*.js")
-		.pipe(gulp.dest("./.tmp/"));
+	return gulp.src("./src/**/*.js").pipe(gulp.dest("./.tmp/"));
 });
 
-gulp.task("remove-stricts:.tmp", ["prebuild"], function() {
-	return gulp.src("./.tmp/**/*.js", {
-			base: "./.tmp/"
+gulp.task("remove-stricts:.tmp", ["prebuild"], () => (
+	gulp.src("./.tmp/**/*.js", {
+		base: "./.tmp/"
 
-		})
+	})
 		.pipe(replace(/"use strict";/, ""))
 		.pipe(replace(/'use strict';/, ""))
-		.pipe(gulp.dest("./.tmp/"));
-});
+		.pipe(gulp.dest("./.tmp/"))
+));
 
-gulp.task("rollup:browser", ["remove-stricts:.tmp"], function() {
-
-	return rollup({
-			input: "./.tmp/main.js",
-			name: pkg.name,
-			format: "iife",
-			plugins: [
-				resolve(),
-				commonjs(),
-			]
-		})
+gulp.task("rollup:browser", ["remove-stricts:.tmp"], () => (
+	rollup({
+		input: "./.tmp/main.js",
+		name: pkg.name,
+		format: "iife",
+		plugins: [
+			resolve(),
+			commonjs(),
+		]
+	})
 		.pipe(source("lapid.js"))
-		.pipe(gulp.dest(pkg.browser.replace("/lapid.js", "")));
-});
+		.pipe(gulp.dest(pkg.browser.replace("/lapid.js", "")))
+));
 
-gulp.task("rollup:main", ["remove-stricts:.tmp"], function() {
-
-	return rollup({
-			input: "./.tmp/main.js",
-			name: pkg.name,
-			format: "cjs",
-			plugins: []
-		})
+gulp.task("rollup:main", ["remove-stricts:.tmp"], () => (
+	rollup({
+		input: "./.tmp/main.js",
+		name: pkg.name,
+		format: "cjs",
+		plugins: []
+	})
 		.pipe(source("lapid.js"))
-		.pipe(gulp.dest(pkg.main.replace("/lapid.js", "")));
-});
+		.pipe(gulp.dest(pkg.main.replace("/lapid.js", "")))
+));
 
-gulp.task("rollup:module", ["remove-stricts:.tmp"], function() {
-
-	return rollup({
-			input: "./.tmp/main.js",
-			name: pkg.name,
-			format: "es",
-			plugins: []
-		})
+gulp.task("rollup:module", ["remove-stricts:.tmp"], () => (
+	rollup({
+		input: "./.tmp/main.js",
+		name: pkg.name,
+		format: "es",
+		plugins: []
+	})
 		.pipe(source("lapid.js"))
-		.pipe(gulp.dest(pkg.module.replace("/lapid.js", "")));
-});
+		.pipe(gulp.dest(pkg.module.replace("/lapid.js", "")))
+));
 
-gulp.task("babel", ["rollup:browser", "rollup:main", "rollup:module"], function() {
-	return gulp.src(pkg.browser)
+gulp.task("babel", ["rollup:browser", "rollup:main", "rollup:module"], () => (
+	gulp.src(pkg.browser)
 		.pipe(babel())
-		.pipe(gulp.dest(pkg.browser.replace("/lapid.js", "")));
-});
+		.pipe(gulp.dest(pkg.browser.replace("/lapid.js", "")))
+));
 
-gulp.task("minify", ["babel"], function() {
-	return gulp.src(pkg.browser)
+gulp.task("minify", ["babel"], () => (
+	gulp.src(pkg.browser)
 		.pipe(minify({
 			ext: {
 				min: ".min.js"
 			},
 			noSource: true
 		}))
-		.pipe(gulp.dest(pkg.browser.replace("/lapid.js", "")));
-});
+		.pipe(gulp.dest(pkg.browser.replace("/lapid.js", "")))
+));
 
-gulp.task("remove-stricts:dist", ["minify"], function() {
-	return gulp.src("./dist/**/*.js", {
-			base: "./dist/"
-		})
-		.pipe(replace(/"use strict";/, ""))
-		.pipe(replace(/'use strict';/, ""))
-		.pipe(gulp.dest("./dist/"));
-});
+gulp.task("remove-stricts:dist", ["minify"], () => (gulp.src("./dist/**/*.js", {
+	base: "./dist/"
+})
+	.pipe(replace(/"use strict";/, ""))
+	.pipe(replace(/'use strict';/, ""))
+	.pipe(gulp.dest("./dist/"))
+));
 
-gulp.task("add-stricts:dist", ["remove-stricts:dist"], function() {
-	return gulp.src("./dist/**/*.js", {
-			base: "./dist/"
-		})
+gulp.task("add-stricts:dist", ["remove-stricts:dist"], () => (
+	gulp.src("./dist/**/*.js", {
+		base: "./dist/"
+	})
 		.pipe(header("\n\"use strict\";"))
-		.pipe(gulp.dest("./dist/"));
-});
+		.pipe(gulp.dest("./dist/"))
+));
 
-gulp.task("header", ["add-stricts:dist"], function() {
-	return gulp.src("./dist/**/*.js", {
-			base: "./dist/"
-		})
+gulp.task("header", ["add-stricts:dist"], () => (
+	gulp.src("./dist/**/*.js", {
+		base: "./dist/"
+	})
 		.pipe(header(fs.readFileSync(".header.js", "utf8"), {
 			pkg
 		}))
-		.pipe(gulp.dest("./dist/"));
-});
+		.pipe(gulp.dest("./dist/"))
+));
 
-gulp.task("clean:.tmp", function() {
-	return del(".tmp");
-});
+gulp.task("clean:.tmp", () => (
+	del(".tmp")
+));
 
-gulp.task("finalize", ["header"], function() {
-
+gulp.task("finalize", ["header"], () => {
 	gulp.start("clean:.tmp");
 
 	return gulp.src("./dist/**/*.js", {
-			base: "./dist/"
-		})
+		base: "./dist/"
+	})
 		.pipe(gulp.dest("./dist/"));
 });
 
-gulp.task("build", ["finalize"], function() {
+gulp.task("build", ["finalize"], () => {
 	tasks.build.finished = moment();
 
 	tasks.build.took = tasks.build.finished.diff(tasks.build.started, "seconds", true);
 
-	gutil.log(gutil.colors.green("build took: " + tasks.build.took + " seconds"));
+	gutil.log(gutil.colors.green(`build took: ${tasks.build.took} seconds`));
 });
 
-gulp.task("backup:dist", ["remove-stricts:.tmp"], function() {
+gulp.task("backup:dist", ["remove-stricts:.tmp"], () => (
+	gulp.src("./dist/**/*.js", {
+		base: "./dist/"
+	})
+		.pipe(gulp.dest("./dist-backup/"))
+));
 
-	return gulp.src("./dist/**/*.js", {
-			base: "./dist/"
-		})
-		.pipe(gulp.dest("./dist-backup/"));
-});
+gulp.task("rollup:dev", ["backup:dist"], () => {
+	let cache;
 
-gulp.task("rollup:dev", ["backup:dist"], function() {
-
-	return rollup({
-			input: "./.tmp/main.js",
-			name: pkg.name,
-			format: "iife",
-			plugins: [
-				resolve(),
-				commonjs(),
-			]
-		})
+	rollup({
+		input: "./.tmp/main.js",
+		name: pkg.name,
+		format: "iife",
+		cache,
+		plugins: [
+			resolve(),
+			commonjs(),
+		]
+	}).on("bundle", (bundle) => {
+		cache = bundle;
+	})
 		.pipe(source("lapid.js"))
 		.pipe(gulp.dest(pkg.browser.replace("/lapid.js", "")));
 });
 
-gulp.task("babel:dev", ["rollup:dev"], function() {
-
-	return gulp.src(pkg.browser)
+gulp.task("babel:dev", ["rollup:dev"], () => (
+	gulp.src(pkg.browser)
 		.pipe(babel())
-		.pipe(gulp.dest(pkg.browser.replace("/lapid.js", "")));
-});
+		.pipe(gulp.dest(pkg.browser.replace("/lapid.js", "")))
+));
 
-gulp.task("minify:dev", ["babel:dev"], function() {
-
-	return gulp.src(pkg.browser)
+gulp.task("minify:dev", ["babel:dev"], () => (
+	gulp.src(pkg.browser)
 		.pipe(minify({
 			ext: {
 				src: "-debug.js",
@@ -201,144 +196,112 @@ gulp.task("minify:dev", ["babel:dev"], function() {
 			},
 			noSource: true
 		}))
-		.pipe(gulp.dest(pkg.browser.replace("/lapid.js", "")));
-});
+		.pipe(gulp.dest(pkg.browser.replace("/lapid.js", "")))
+));
 
-gulp.task("remove-stricts:dev", ["minify:dev"], function() {
-
-	return gulp.src("./dist/**/*.js", {
-			base: "./dist/"
-		})
+gulp.task("remove-stricts:dev", ["minify:dev"], () => (
+	gulp.src("./dist/**/*.js", {
+		base: "./dist/"
+	})
 		.pipe(replace(/"use strict";/, ""))
 		.pipe(replace(/'use strict';/, ""))
-		.pipe(gulp.dest("./dist/"));
-});
+		.pipe(gulp.dest("./dist/"))
+));
 
-gulp.task("add-stricts:dev", ["remove-stricts:dev"], function() {
-
-	return gulp.src("./dist/**/*.js", {
-			base: "./dist/"
-		})
+gulp.task("add-stricts:dev", ["remove-stricts:dev"], () => (
+	gulp.src("./dist/**/*.js", {
+		base: "./dist/"
+	})
 		.pipe(header("\n\"use strict\";"))
-		.pipe(gulp.dest("./dist/"));
-});
+		.pipe(gulp.dest("./dist/"))
+));
 
-gulp.task("header:dev", ["add-stricts:dev"], function() {
-
-	return gulp.src("./dist/**/*.js", {
-			base: "./dist/"
-		})
+gulp.task("header:dev", ["add-stricts:dev"], () => (
+	gulp.src("./dist/**/*.js", {
+		base: "./dist/"
+	})
 		.pipe(header(fs.readFileSync(".header.js", "utf8"), {
 			pkg
 		}))
-		.pipe(gulp.dest("./dist/"));
-});
+		.pipe(gulp.dest("./dist/"))
+));
 
-gulp.task("finalize:dev", ["header:dev"], function() {
+gulp.task("finalize:dev", ["header:dev"], () => (
+	// gulp.start("clean:.tmp");
 
-	gulp.start("clean:.tmp");
+	gulp.src("./dist/**/*.js", {
+		base: "./dist/"
+	})
+		.pipe(gulp.dest("./dist/"))
+));
 
-	return gulp.src("./dist/**/*.js", {
-			base: "./dist/"
-		})
-		.pipe(gulp.dest("./dist/"));
-});
-
-gulp.task("build:dev", ["finalize:dev"], function() {
+gulp.task("build:dev", ["finalize:dev"], () => {
 	tasks.build.finished = moment();
 
 	tasks.build.took = tasks.build.finished.diff(tasks.build.started, "seconds", true);
 
-	gutil.log(gutil.colors.green("build took: " + tasks.build.took + " seconds"));
+	gutil.log(gutil.colors.green(`build took: ${tasks.build.took} seconds`));
 });
 
-var server = gls.static("./", 8000);
+const server = gls.static("./", 8000);
 
-gulp.task("start-server", ["build:dev"], function() {
+gulp.task("start-server", ["build:dev"], () => {
 	server.start();
 });
 
-gulp.task("watch:src", ["start-server"], function() {
-	var type = "";
-
-	return chokidar.watch("dist/**/*.js")
-		.on("add", function(path, stats) {
-			type = "added";
-		})
-		.on("change", function(path, stats) {
-			type = "changed";
-
-		}).on("unlink", function(path, stats) {
-			type = "deleted";
-
-		}).on("ready", function(path, stats) {
+gulp.task("watch:src", ["start-server"], () => (
+	chokidar.watch("src/**/*.js", {
+		ignoreInitial: true
+	})
+		.on("all", () => {
 			gulp.start("build:dev");
-
-		});
-
-});
-
-gulp.task("watch:dist", ["start-server"], function() {
-	var type = "";
-
-	return chokidar.watch("dist/**/*.js")
-		.on("add", function(path, stats) {
-			type = "added";
 		})
-		.on("change", function(path, stats) {
-			type = "changed";
+));
 
-		}).on("unlink", function(path, stats) {
-			type = "deleted";
-
-		}).on("ready", function(path, stats) {
+gulp.task("watch:dist", ["start-server"], () => (
+	chokidar.watch("dist/**/*.js", {
+		ignoreInitial: true
+	})
+		.on("all", (watchPath) => {
+			const type = "changed";
 			server.notify.apply(server, [{
 				type,
-				path
+				path: watchPath
 			}]);
-		});
-
-});
-
-gulp.task("watch:examples", ["start-server"], function() {
-	var type = "";
-
-	return chokidar.watch("examples/**/*")
-		.on("add", function(path, stats) {
-			type = "added";
 		})
-		.on("change", function(path, stats) {
-			type = "changed";
+		.on("error", (error) => {
+			gutil.log(error);
+		})
+));
 
-		}).on("unlink", function(path, stats) {
-			type = "deleted";
+gulp.task("watch:examples", ["start-server"], () => (chokidar.watch("examples/**/*")
+	.on("all", (watchPath) => {
+		const type = "changed";
+		server.notify.apply(server, [{
+			type,
+			path: watchPath
+		}]);
+	})
+	.on("error", (error) => {
+		gutil.log(error);
+	})
+));
 
-		}).on("ready", function(path, stats) {
-			server.notify.apply(server, [{
-				type,
-				path
-			}]);
-		});
+gulp.task("dev", ["watch:src", "watch:dist", "watch:examples"], () => {
 
 });
 
-gulp.task("dev", ["watch:src", "watch:dist", "watch:examples"], function() {
-
-});
-
 // --------------------------------------------------------------
 // --------------------------------------------------------------
 // --------------------------------------------------------------
 
-let branch = yargs.argv.branch || "master";
+const branch = yargs.argv.branch || "master";
 
-let rootDir = path.resolve(yargs.argv.rootDir || "./") + "/";
+const rootDir = `${path.resolve(yargs.argv.rootDir || "./")}/`;
 
-let currVersion = function() {
-	return JSON.parse(fs.readFileSync(rootDir + "package.json")).version;
-};
+const currVersion = () => JSON.parse(fs.readFileSync(`${rootDir}package.json`)).version;
 
-let preid = function() {
+const preid = () => {
 	if (yargs.argv.alpha) {
 		return "alpha";
 	}
@@ -354,7 +317,7 @@ let preid = function() {
 	return undefined;
 };
 
-let versioning = function() {
+const versioning = () => {
 	if (preid()) {
 		return "prerelease";
 	}
@@ -367,194 +330,223 @@ let versioning = function() {
 	return "patch";
 };
 
-gulp.task("commit:build", ["build"], function() {
-
-	return gulp.src("./dist/**/*.js", {
+gulp.task("commit:build", ["build"], () => (
+	gulp.src("./dist/**/*.js", {
 		cwd: rootDir
 	}).pipe(git.commit("Build: generated dist files", {
 		cwd: rootDir
-	}));
+	}))
+));
+
+gulp.task("docs", ["commit:build"], () => {
+	gulp.src(["README.md", "./src/**/*.js"], {
+		read: false
+	})
+		.pipe(jsdoc(jsdocConfig));
 });
 
-gulp.task("bump", ["commit:build"], function(resolve) {
-	let newVersion = semver.inc(currVersion(), versioning(), preid());
+gulp.task("commit:docs", ["docs"], () => (
+	gulp.src("./docs/**", {
+		cwd: rootDir
+	}).pipe(git.commit("Build: generated docs files", {
+		cwd: rootDir
+	}))
+));
+
+gulp.task("bump", ["commit:docs"], (cb) => {
+	const newVersion = semver.inc(currVersion(), versioning(), preid());
 
 	git.pull("origin", branch, {
 		args: "--rebase",
 		cwd: rootDir
 	});
 
-	let paths = {
-		versionsToBump: _.map(["package.json", "bower.json", "manifest.json"], function(fileName) {
-			return rootDir + fileName;
-		})
+	const paths = {
+		versionsToBump: _.map(["package.json", "bower.json", "manifest.json"], fileName => rootDir + fileName)
 	};
 
 	gulp.src(paths.versionsToBump, {
-			cwd: rootDir
-		})
+		cwd: rootDir
+	})
 		.pipe(jeditor({
-			"version": newVersion
+			version: newVersion
 		}))
 		.pipe(gulp.dest("./", {
 			cwd: rootDir
 		}));
 
-	let commitMessage = "Build: Bumps version to v" + newVersion;
+	const commitMessage = `Build: Bumps version to v${newVersion}`;
 
 	gulp.src("./*.json", {
 		cwd: rootDir
 	}).pipe(git.commit(commitMessage, {
 		cwd: rootDir
-	})).on("end", function() {
-		git.push("origin", branch, {
+	})).on("end", () => {
+		git.push(
+			"origin", branch, {
 
-			cwd: rootDir
-		}, function(err) {
-			if (err) {
-				console.error(err);
+				cwd: rootDir
+			}, (err) => {
+				if (err) {
+					gutil.log(err);
+				}
+				else {
+					cb();
+				}
 			}
-			else {
-				resolve();
-			}
-		});
+		);
 	});
-
 });
 
-var tag;
+let tag;
 
-var tagVersion = function(opts) {
-	if (!opts) opts = {};
-	if (!opts.key) opts.key = "version";
-	if (typeof opts.prefix === "undefined") opts.prefix = "v";
-	if (typeof opts.push === "undefined") opts.push = true;
+const tagVersion = function(newOptions) {
+	let opts = newOptions;
+
+	if (!newOptions) {
+		opts = {};
+	}
+
+	if (!opts.key) {
+		opts.key = "version";
+	}
+
+	if (typeof opts.prefix === "undefined") {
+		opts.prefix = "v";
+	}
+	if (typeof opts.push === "undefined") {
+		opts.push = true;
+	}
 
 	function modifyContents(file, cb) {
-		var version = opts.version;
+		let version = opts.version;
 		if (!opts.version) {
-			if (file.isNull()) return cb(null, file);
-			if (file.isStream()) return cb(new Error("gulp-tag-version: streams not supported"));
+			if (file.isNull()) {
+				cb(null, file);
+			}
+			if (file.isStream()) {
+				cb(new Error("gulp-tag-version: streams not supported"));
+			}
 
-			var json = JSON.parse(file.contents.toString());
+			const json = JSON.parse(file.contents.toString());
 			version = json[opts.key];
 		}
 		tag = opts.prefix + version;
 
-		var message = tag;
+		const message = tag;
 
-		gutil.log("Tagging as: " + gutil.colors.cyan(tag));
-		git.tag(tag, message, {
-			cwd: opts.cwd
-		}, function(err) {
-			if (err) {
-				throw err;
+		gutil.log(`Tagging as: ${gutil.colors.cyan(tag)}`);
+		git.tag(
+			tag, message, {
+				args: `-s -v ${  tag}`,
+				cwd: opts.cwd
+			}, (err) => {
+				if (err) {
+					throw err;
+				}
+				cb();
 			}
-			cb();
-		});
+		);
 	}
 
 	return map(modifyContents);
 };
 
-gulp.task("tag-and-push", ["bump"], function(done) {
-
+gulp.task("tag-and-push", ["bump"], (done) => {
 	gulp.src("./", {
-			cwd: rootDir
-		})
+		cwd: rootDir
+	})
 		.pipe(tagVersion({
 			version: currVersion(),
 			cwd: rootDir
 		}))
-		.on("end", function() {
-			git.push("origin", branch, {
-				args: "--tags",
-				cwd: rootDir
-			}, done);
+		.on("end", () => {
+			git.push(
+				"origin", branch, {
+					args: "--tags",
+					cwd: rootDir
+				}, done
+			);
 		});
 });
 
-gulp.task("npm-publish", ["tag-and-push"], function(done) {
+gulp.task("npm-publish", ["tag-and-push"], (done) => {
 	childProcess.spawn("npm", ["publish", rootDir], {
 		stdio: "inherit",
 		shell: true
 	}).on("close", done);
 });
 
-gulp.task("release", ["npm-publish"], function(cb) {
-	var GitHubAuth = JSON.parse(fs.readFileSync(rootDir + ".githubauth"));
+gulp.task("release", ["npm-publish"], (cb) => {
+	const GitHubAuth = JSON.parse(fs.readFileSync(`${rootDir}.githubauth`));
 
-	var gh = new GitHub(GitHubAuth);
+	const gh = new GitHub(GitHubAuth);
 
-	var repo = gh.getRepo("nnmrts", "lapid");
+	const repo = gh.getRepo("nnmrts", "lapid");
 
-	repo.listTags().then(function(response) {
-		let tag_name = "v" + currVersion();
+	repo.listTags().then(() => {
+		const tagName = `v${currVersion()}`;
 
-		let target_commitish = branch;
+		const targetCommitish = branch;
 
-		let name = tag_name;
+		const name = tagName;
 
-		let body = "browser: [lapid.js](https://raw.githubusercontent.com/nnmrts/lapid/%t/dist/browser/lapid.js)\nnpm: [lapid.js](https://raw.githubusercontent.com/nnmrts/lapid/%t/dist/lapid.js)\nes module: [lapid.js](https://raw.githubusercontent.com/nnmrts/lapid/%t/dist/module/lapid.js)".replace(/%t/g, tag_name);
+		const body = "browser: [lapid.js](https://raw.githubusercontent.com/nnmrts/lapid/%t/dist/browser/lapid.js)\nnpm: [lapid.js](https://raw.githubusercontent.com/nnmrts/lapid/%t/dist/lapid.js)\nes module: [lapid.js](https://raw.githubusercontent.com/nnmrts/lapid/%t/dist/module/lapid.js)".replace(/%t/g, tagName);
 
-		let prerelease = versioning() === "prerelease";
+		const prerelease = versioning() === "prerelease";
 
 		return repo.createRelease({
-			tag_name,
-			target_commitish,
+			tag_name: tagName,
+			target_commitish: targetCommitish,
 			name,
 			body,
 			draft: false,
 			prerelease
-		}).then(function(response) {}).catch(function(e) {
+		}).then(() => {}).catch((e) => {
 			gutil.log(e);
 
 			cb(e);
 		});
-
-	}).catch(function(e) {
+	}).catch((e) => {
 		cb(e);
 	});
-
 });
 
 gulp.task("default", ["release"]);
 
-gulp.task("clean:dist", function() {
-	return del("dist");
-});
+gulp.task("clean:dist", () => (
+	del("dist")
+));
 
-gulp.task("restore:dist", ["clean:dist"], function() {
-	return gulp.src("./dist-backup/**/*.js", {
-			base: "./dist-backup/"
-		})
-		.pipe(gulp.dest("./dist/"));
-});
+gulp.task("restore:dist", ["clean:dist"], () => (
+	gulp.src("./dist-backup/**/*.js", {
+		base: "./dist-backup/"
+	})
+		.pipe(gulp.dest("./dist/"))
+));
 
-gulp.task("clean:dist-backup", ["restore:dist"], function() {
-	return del("dist-backup");
-});
+gulp.task("clean:dist-backup", ["restore:dist"], () => (
+	del("dist-backup")
+));
 
-var cleanSignal;
+let cleanSignal;
 
-gulp.task("kill-process", ["clean:dist-backup"], function() {
-	return process.kill(process.pid, cleanSignal);
-});
+gulp.task("kill-process", ["clean:dist-backup"], () => (
+	process.kill(process.pid, cleanSignal)
+));
 
-nodeCleanup(function(exitCode, signal) {
-
+nodeCleanup((exitCode, signal) => {
 	if (signal) {
-
 		cleanSignal = signal;
 
 		server.stop();
 
 		gulp.start("kill-process");
 
-		nodeCleanup.uninstall(); // don't call cleanup handler again 
+		nodeCleanup.uninstall(); // don't call cleanup handler again
 		return false;
 	}
-
+	return undefined;
 }, {
 	ctrl_C: "{^C}",
 	uncaughtException: "Uh oh. Look what happened:"

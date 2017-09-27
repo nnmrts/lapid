@@ -12,7 +12,7 @@ const Ngram = function(options) {
 
 	if (options.index === 0 && options.wordIndex === 0 && options.lineIndex === 0) {
 		for (let i = 0; i < store.text.length - options.limit; i++) {
-			let ngram = store.text.substring(i, i + options.limit);
+			const ngram = store.text.substring(i, i + options.limit);
 
 			if (!store.weightedNgrams[ngram]) {
 				store.weightedNgrams[ngram] = 1;
@@ -42,11 +42,11 @@ const Ngram = function(options) {
 		const possibilites = store.markovChain[store.ngramsArray[options.index - 1]];
 
 		if (possibilites) {
-			let nextLetter = utils.weightedRandom(possibilites)();
+			const nextLetter = utils.weightedRandom(possibilites)();
 
 			store.ngrams += nextLetter;
 
-			let currentNgram = store.ngrams.substring(store.ngrams.length - (options.limit), store.ngrams.length);
+			const currentNgram = store.ngrams.substring(store.ngrams.length - (options.limit), store.ngrams.length);
 
 			this.text = currentNgram;
 

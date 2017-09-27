@@ -418,6 +418,12 @@ const tagVersion = function(newOptions) {
 		opts.push = true;
 	}
 
+	/**
+	 *
+	 *
+	 * @param {any} file
+	 * @param {any} cb
+	 */
 	function modifyContents(file, cb) {
 		let version = opts.version;
 		if (!opts.version) {
@@ -438,15 +444,24 @@ const tagVersion = function(newOptions) {
 		gutil.log(`Tagging as: ${gutil.colors.cyan(tag)}`);
 		git.tag(
 			tag, message, {
-				args: "-s -v",
+				args: "-s",
 				cwd: opts.cwd
 			}, (err) => {
 				if (err) {
 					throw err;
 				}
-				cb();
 			}
 		);
+
+		git.tag(tag, {
+			args: "-v",
+			cwd: opts.cwd
+		}, (err) => {
+			if (err) {
+				throw err;
+			}
+			cb();
+		});
 	}
 
 	return map(modifyContents);

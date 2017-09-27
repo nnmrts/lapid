@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>generate/Line.js - Documentation</title>
+
+    <script src="scripts/prettify/prettify.js"></script>
+    <script src="scripts/prettify/lang-css.js"></script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc.css">
+</head>
+<body>
+
+<input type="checkbox" id="nav-trigger" class="nav-trigger" />
+<label for="nav-trigger" class="navicon-button x">
+  <div class="navicon"></div>
+</label>
+
+<label for="nav-trigger" class="overlay"></label>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Global</h3><ul><li><a href="global.html#Line">Line</a></li><li><a href="global.html#Scheme">Scheme</a></li></ul>
+</nav>
+
+<div id="main">
+    
+    <h1 class="page-title">generate/Line.js</h1>
+    
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>import utils from "../utils.js";
+import DEFAULTS from "./DEFAULTS.js";
+
+import Syllable from "./Syllable.js";
+import Word from "./Word.js";
+
+import language from "../language.js";
+
+/**
+ * Initiates the generation of a line.
+ *
+ * @param {object} newOptions An object representing options for generating a line.
+ * @param {function} resolve A typical resolve function of promises.
+ */
+const Line = function(newOptions, resolve) {
+	const options = utils.mergeDeep(DEFAULTS.line, newOptions);
+
+	if (options.rhyme) {
+		console.log("rhyme here");
+	}
+	else {
+		console.log("no rhyme here");
+		if (options.limitType === "syllable") {
+
+		}
+	}
+
+	/**
+	 * Actually generates the line.
+	 * @function
+	 * @returns {string} the text of the line.
+	 */
+	const generate = function() {
+		let text = utils.weightedRandom(language.startNgrams[options.word.ngram.limit])();
+
+		let currentNgram = text;
+
+		for (let i = 0; i &lt; options.limit; i++) {
+			const possibilites = language.ngrams[options.word.ngram.limit][currentNgram];
+
+			if (!possibilites) {
+				break;
+			}
+
+			const next = utils.weightedRandom(possibilites)();
+
+			text += next;
+
+			currentNgram = text.substring(text.length - options.word.ngram.limit, text.length);
+
+			// var syllableOrWordOptions = {
+			// 	index: i,
+			// 	lineIndex: options.index
+			// };
+
+			// if (options.limitType === "syllable") {
+			// 	scope[i] = new Syllable(syllableOrWordOptions);
+
+			// }
+
+			// if (options.limitType === "word") {
+			// 	scope[i] = new Word(syllableOrWordOptions);
+
+			// }
+
+			// scope.text += scope[i].text + " ";
+		}
+
+		console.log(`line ${options.index} finished`);
+
+		resolve();
+
+		return text;
+	};
+
+	if (language.corpus) {
+		this.text = generate();
+	}
+	else {
+		utils.getJSON("../../corpora/de.json", (corpus) => {
+			console.time();
+
+			language.corpus = corpus;
+
+			language.text = "";
+
+			let corpusIndex = 0;
+
+			const loop = function() {
+				setTimeout(() => {
+					if (corpusIndex &lt; corpus.length) {
+						language.text += `${language.corpus[corpusIndex]} `;
+
+						const ngram = language.corpus[corpusIndex].substring(0, options.word.ngram.limit);
+
+						if (!language.startNgrams[options.word.ngram.limit]) {
+							language.startNgrams[options.word.ngram.limit] = {};
+						}
+
+						if (!language.startNgrams[options.word.ngram.limit][ngram]) {
+							language.startNgrams[options.word.ngram.limit][ngram] = 1;
+						}
+						else {
+							language.startNgrams[options.word.ngram.limit][ngram] += 1;
+						}
+
+						corpusIndex += 1;
+
+						if (corpusIndex % 100 === 0) {
+							console.log(`concatenated ${corpusIndex} sentences`);
+						}
+
+						loop();
+					}
+					else {
+						console.log("TIME");
+						console.timeEnd();
+
+						language.text += language.corpus[corpusIndex];
+
+						for (let i = 0; i &lt; language.text.length - options.word.ngram.limit; i++) {
+							const ngram = language.text.substring(i, i + options.word.ngram.limit);
+
+							if (!language.ngrams[options.word.ngram.limit]) {
+								language.ngrams[options.word.ngram.limit] = {};
+							}
+							if (!language.ngrams[options.word.ngram.limit][ngram]) {
+								language.ngrams[options.word.ngram.limit][ngram] = {};
+							}
+							if (!language.ngrams[options.word.ngram.limit][ngram][language.text.charAt(i + options.word.ngram.limit)]) {
+								language.ngrams[options.word.ngram.limit][ngram][language.text.charAt(i + options.word.ngram.limit)] = 1;
+							}
+							else {
+								language.ngrams[options.word.ngram.limit][ngram][language.text.charAt(i + options.word.ngram.limit)] += 1;
+							}
+
+							if (i % 10000 === 0) {
+								console.log(`worked through ${i} characters`);
+							}
+						}
+
+						this.text = generate();
+					}
+				}, 1);
+
+				// return language.text;
+			};
+
+			loop();
+
+			// language.text = language.corpus.join(" ");
+		});
+	}
+};
+
+export default Line;
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+</footer>
+
+<script>prettyPrint();</script>
+<script src="scripts/linenumber.js"></script>
+</body>
+</html>

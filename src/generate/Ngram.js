@@ -3,7 +3,7 @@ import DEFAULTS from "./DEFAULTS.js";
 
 import Letter from "./Letter.js";
 
-import store from "../store.js";
+// import store from "../store.js";
 
 const Ngram = function(options) {
 	options = utils.mergeDeep(DEFAULTS.ngram, options);

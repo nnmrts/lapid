@@ -438,7 +438,7 @@ const tagVersion = function(newOptions) {
 		gutil.log(`Tagging as: ${gutil.colors.cyan(tag)}`);
 		git.tag(
 			tag, message, {
-				args: `-s -v ${  tag}`,
+				args: "-s -v",
 				cwd: opts.cwd
 			}, (err) => {
 				if (err) {

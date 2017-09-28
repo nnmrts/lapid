@@ -31,11 +31,32 @@ const Line = function(newOptions, resolve) {
 	 * @returns {string} the text of the line.
 	 */
 	const generate = function() {
-		let text = utils.weightedRandom(language.startNgrams[options.word.ngram.limit])();
+		let text = "";
 
-		let currentNgram = text;
+		let currentNgram = utils.weightedRandom(language.startNgrams[options.word.ngram.limit])();
+
+		let ngramRe = new RegExp(currentNgram, "g");
+
+		let match = [];
 
 		for (let i = 0; i < options.limit; i++) {
+			while ((match = (ngramRe.exec(language.text))) !== null) {
+				const possibility = language.text.substring(match.index + currentNgram.length, (match.index + currentNgram.length) + 1);
+
+				if (!language.ngrams[options.word.ngram.limit]) {
+					language.ngrams[options.word.ngram.limit] = {};
+				}
+				if (!language.ngrams[options.word.ngram.limit][currentNgram]) {
+					language.ngrams[options.word.ngram.limit][currentNgram] = {};
+				}
+				if (!language.ngrams[options.word.ngram.limit][currentNgram][possibility]) {
+					language.ngrams[options.word.ngram.limit][currentNgram][possibility] = 1;
+				}
+				else {
+					language.ngrams[options.word.ngram.limit][currentNgram][possibility] += 1;
+				}
+			}
+
 			const possibilites = language.ngrams[options.word.ngram.limit][currentNgram];
 
 			if (!possibilites) {
@@ -47,6 +68,8 @@ const Line = function(newOptions, resolve) {
 			text += next;
 
 			currentNgram = text.substring(text.length - options.word.ngram.limit, text.length);
+
+			ngramRe = new RegExp(currentNgram, "g");
 
 			// var syllableOrWordOptions = {
 			// 	index: i,
@@ -118,26 +141,26 @@ const Line = function(newOptions, resolve) {
 
 						language.text += language.corpus[corpusIndex];
 
-						for (let i = 0; i < language.text.length - options.word.ngram.limit; i++) {
-							const ngram = language.text.substring(i, i + options.word.ngram.limit);
+						// for (let i = 0; i < language.text.length - options.word.ngram.limit; i++) {
+						// 	const ngram = language.text.substring(i, i + options.word.ngram.limit);
 
-							if (!language.ngrams[options.word.ngram.limit]) {
-								language.ngrams[options.word.ngram.limit] = {};
-							}
-							if (!language.ngrams[options.word.ngram.limit][ngram]) {
-								language.ngrams[options.word.ngram.limit][ngram] = {};
-							}
-							if (!language.ngrams[options.word.ngram.limit][ngram][language.text.charAt(i + options.word.ngram.limit)]) {
-								language.ngrams[options.word.ngram.limit][ngram][language.text.charAt(i + options.word.ngram.limit)] = 1;
-							}
-							else {
-								language.ngrams[options.word.ngram.limit][ngram][language.text.charAt(i + options.word.ngram.limit)] += 1;
-							}
+						// 	if (!language.ngrams[options.word.ngram.limit]) {
+						// 		language.ngrams[options.word.ngram.limit] = {};
+						// 	}
+						// 	if (!language.ngrams[options.word.ngram.limit][ngram]) {
+						// 		language.ngrams[options.word.ngram.limit][ngram] = {};
+						// 	}
+						// 	if (!language.ngrams[options.word.ngram.limit][ngram][language.text.charAt(i + options.word.ngram.limit)]) {
+						// 		language.ngrams[options.word.ngram.limit][ngram][language.text.charAt(i + options.word.ngram.limit)] = 1;
+						// 	}
+						// 	else {
+						// 		language.ngrams[options.word.ngram.limit][ngram][language.text.charAt(i + options.word.ngram.limit)] += 1;
+						// 	}
 
-							if (i % 10000 === 0) {
-								console.log(`worked through ${i} characters`);
-							}
-						}
+						// 	if (i % 10000 === 0) {
+						// 		console.log(`worked through ${i} characters`);
+						// 	}
+						// }
 
 						this.text = generate();
 					}

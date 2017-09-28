@@ -10,7 +10,7 @@ const language = {
 
 	getLanguage: async() => {
 		for (let i = 1; i <= 10; i++) {
-			await utils.getJSON(`/language/${language.id}/${i}.json`, (languageJSON) => {
+			await utils.getJSON(`/language/${language.id}.json`, (languageJSON) => {
 				language.ngrams[i] = languageJSON.ngrams;
 				language.startNgrams[i] = languageJSON.startNgrams;
 			});

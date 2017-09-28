@@ -54,6 +54,8 @@
 			"matchDescription": ".+",
 			"requireParamDescription": true,
 			"requireReturnDescription": true
-		}]
+		}],
+
+		"no-cond-assign": ["error", "except-parens"]
 	}
 }

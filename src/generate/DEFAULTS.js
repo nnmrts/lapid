@@ -5,7 +5,7 @@ DEFAULTS.letter = {
 };
 
 DEFAULTS.ngram = {
-	limit: 4,
+	limit: 5,
 	letter: DEFAULTS.letter
 };
 
